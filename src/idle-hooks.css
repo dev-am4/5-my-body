@@ -1,5 +1,21 @@
 /* Rotating idle hooks: designed for large projection and minimal UI. */
 
+.idle-ui-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.idle-ui-layer.visible {
+  opacity: 1;
+}
+
+.idle-ui-layer.hidden {
+  opacity: 0;
+}
+
 .idle-hook-copy {
   animation: idleHookCycle 5.6s cubic-bezier(.22,.7,.2,1) both;
   will-change: opacity, transform, filter;
@@ -43,6 +59,38 @@
 .no-topic .minimal-button-rail .topic-button:nth-child(4) .physical-target::before { animation-delay: .36s; }
 .no-topic .minimal-button-rail .topic-button:nth-child(5) .physical-target::before { animation-delay: .48s; }
 
+/* Story mode is pure film. The physical/touch zones remain live but become invisible.
+   Tapping the active zone toggles back to idle; tapping another zone switches films. */
+.video-first .video-deck {
+  transition: opacity 320ms cubic-bezier(.22,.72,.2,1);
+}
+
+.video-first .video-vignette {
+  transition: opacity 220ms ease;
+}
+
+.video-first.film-active .video-vignette {
+  opacity: 0;
+}
+
+.video-first .minimal-button-rail {
+  transition: opacity 180ms ease;
+}
+
+.video-first .minimal-button-rail.interaction-visible {
+  opacity: 1;
+}
+
+.video-first .minimal-button-rail.interaction-concealed {
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.video-first .minimal-button-rail.interaction-concealed .topic-button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 @keyframes idleHookCycle {
   0% {
     opacity: 0;
@@ -78,6 +126,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .idle-ui-layer,
+  .video-first .minimal-button-rail,
+  .video-first .video-deck,
+  .video-first .video-vignette {
+    transition: none;
+  }
+
   .idle-hook-copy {
     animation: idleHookFadeOnly 5.6s linear both;
   }
