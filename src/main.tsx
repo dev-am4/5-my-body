@@ -10,6 +10,7 @@ import './cinema-fixes.css'
 import './touch-zone.css'
 import './video-first-minimal.css'
 import './idle-hooks.css'
+import './prototype-flow.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
