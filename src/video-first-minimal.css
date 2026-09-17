@@ -1,0 +1,293 @@
+/* Video-first presentation layer.
+   The projection should feel like a continuous film with only a small amount of text. */
+
+.video-first .cinema-layer {
+  background: #000;
+}
+
+.video-first .video-deck {
+  object-fit: cover;
+  transform: scale(1.002);
+  transition: opacity 220ms linear;
+}
+
+.video-first .video-vignette {
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 11%, transparent 68%, rgba(0,0,0,.52) 100%),
+    radial-gradient(ellipse at center, transparent 58%, rgba(0,0,0,.28) 100%);
+}
+
+.video-first .ambient,
+.video-first .transition-sweep {
+  display: none;
+}
+
+.video-first .media-missing {
+  display: none;
+}
+
+/* Brand is intentionally tiny. It should never compete with the film. */
+.minimal-brand {
+  position: absolute;
+  z-index: 6;
+  left: 3.2vw;
+  top: 2.2vh;
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  color: rgba(230,255,253,.46);
+  pointer-events: none;
+  text-shadow: 0 2px 18px rgba(0,0,0,.85);
+}
+
+.minimal-brand span,
+.minimal-brand strong {
+  font-size: clamp(8px, .55vw, 11px);
+  letter-spacing: .18em;
+  font-weight: 500;
+}
+
+.minimal-brand i {
+  width: 18px;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.minimal-brand strong {
+  color: color-mix(in srgb, var(--accent) 68%, white 12%);
+}
+
+/* Idle message stays compact and sits just above the shared reach band. */
+.minimal-idle-copy {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 39.5vh;
+  width: min(68vw, 1120px);
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 3px 24px rgba(0,0,0,.92);
+  animation: minimalCaptionIn .55s ease both;
+}
+
+.minimal-idle-copy h1 {
+  margin: 0;
+  font-size: clamp(22px, 2vw, 40px);
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -.015em;
+}
+
+.minimal-idle-copy p {
+  margin: .45rem 0 0;
+  color: rgba(225,255,252,.58);
+  font-size: clamp(10px, .74vw, 14px);
+  letter-spacing: .08em;
+}
+
+/* Only one small educational caption is visible during the cinematic loop. */
+.minimal-caption {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 39vh;
+  width: min(66vw, 1050px);
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 3px 30px rgba(0,0,0,.96);
+  animation: minimalCaptionIn .5s ease both;
+}
+
+.minimal-caption small {
+  display: block;
+  margin-bottom: .38rem;
+  color: var(--accent);
+  font-size: clamp(9px, .62vw, 12px);
+  letter-spacing: .16em;
+  font-weight: 600;
+}
+
+.minimal-caption h2 {
+  margin: 0;
+  font-size: clamp(25px, 2.25vw, 45px);
+  line-height: 1.12;
+  font-weight: 550;
+  letter-spacing: -.02em;
+}
+
+.minimal-caption p {
+  margin: .52rem auto 0;
+  max-width: 820px;
+  color: rgba(238,255,253,.76);
+  font-size: clamp(11px, .85vw, 16px);
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.minimal-stat {
+  display: inline-block;
+  margin-top: .62rem;
+  padding: .18rem .5rem;
+  border-top: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  color: rgba(236,255,253,.68);
+  font-size: clamp(9px, .66vw, 12px);
+  letter-spacing: .08em;
+}
+
+.transition-caption {
+  position: absolute;
+  z-index: 6;
+  left: 50%;
+  bottom: 40vh;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: .65rem;
+  pointer-events: none;
+  text-shadow: 0 3px 24px rgba(0,0,0,.95);
+  animation: minimalCaptionIn .35s ease both;
+}
+
+.transition-caption span {
+  color: var(--accent);
+  font-size: clamp(10px, .72vw, 14px);
+  letter-spacing: .12em;
+}
+
+.transition-caption strong {
+  color: rgba(242,255,254,.84);
+  font-size: clamp(16px, 1.2vw, 24px);
+  font-weight: 500;
+}
+
+/* Keep the physical reach zone, but remove card-like UI. */
+.video-first .minimal-button-rail {
+  left: 3.4vw;
+  right: 3.4vw;
+  bottom: 20vh;
+  height: 17vh;
+  min-height: 126px;
+  max-height: 180px;
+  gap: 1.05vw;
+}
+
+.video-first .topic-button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: .2vh .45vw;
+  display: block;
+  text-align: center;
+  overflow: visible;
+}
+
+.video-first .topic-button::before {
+  display: none;
+}
+
+.video-first .topic-button:hover,
+.video-first .topic-button.active {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.video-first .button-number {
+  position: absolute;
+  left: 50%;
+  top: .4vh;
+  transform: translateX(-50%);
+  color: var(--button-accent);
+  font-size: clamp(9px, .62vw, 12px);
+  opacity: .72;
+}
+
+.video-first .button-copy {
+  position: absolute;
+  left: 50%;
+  top: 2.7vh;
+  width: 92%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.video-first .button-copy strong {
+  color: rgba(241,255,254,.82);
+  font-size: clamp(10px, .76vw, 14px);
+  line-height: 1.2;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.video-first .button-copy small {
+  display: none;
+}
+
+.video-first .physical-target {
+  position: absolute;
+  left: 50%;
+  bottom: .6vh;
+  width: clamp(58px, 4.2vw, 84px);
+  min-width: 58px;
+  max-width: 84px;
+  transform: translateX(-50%);
+  border: 1.5px solid color-mix(in srgb, var(--button-accent) 58%, transparent);
+  background: rgba(0,0,0,.2);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--button-accent) 10%, transparent),
+    inset 0 0 22px color-mix(in srgb, var(--button-accent) 6%, transparent);
+}
+
+.video-first .topic-button.active .physical-target {
+  background: color-mix(in srgb, var(--button-accent) 8%, transparent);
+  box-shadow:
+    0 0 30px color-mix(in srgb, var(--button-accent) 18%, transparent),
+    inset 0 0 26px color-mix(in srgb, var(--button-accent) 10%, transparent);
+}
+
+.video-first .physical-target i {
+  width: 28%;
+}
+
+/* Fallback is only a development stand-in until generated films are supplied. */
+.video-first .fallback-stage {
+  inset: 6vh 0 34vh;
+}
+
+.video-first .fallback-stage.active {
+  transform: translateX(-21vw) scale(.9);
+}
+
+.video-first .fallback-body {
+  height: 88%;
+}
+
+.video-first .body-orbit {
+  opacity: .45;
+}
+
+@keyframes minimalCaptionIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (max-height: 760px) {
+  .minimal-idle-copy,
+  .minimal-caption {
+    bottom: 40vh;
+  }
+
+  .video-first .minimal-button-rail {
+    bottom: 18.5vh;
+    height: 18vh;
+    min-height: 112px;
+  }
+
+  .video-first .physical-target {
+    width: clamp(50px, 3.8vw, 70px);
+    min-width: 50px;
+  }
+}
