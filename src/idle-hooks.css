@@ -67,6 +67,46 @@
   width: 23vw;
 }
 
+/* Test artwork supplied by the user. While the final idle MP4 is not present,
+   show this image 1:1 as the idle visual. The five buttons already exist in the
+   artwork, so the DOM controls become invisible hit-zones aligned on top. */
+.video-first.no-topic .cinema-layer.media-fallback {
+  background: #061424 url('/media/idle-test.webp') center center / cover no-repeat;
+}
+
+.video-first.no-topic .cinema-layer.media-fallback .fallback-stage {
+  display: none;
+}
+
+.video-first.no-topic.idle-ui-visible .video-vignette {
+  opacity: 0;
+}
+
+.video-first.no-topic.idle-ui-visible .minimal-button-rail.interaction-visible {
+  left: 38.6vw;
+  right: 8.2vw;
+  bottom: 10.4vh;
+  height: 23vh;
+  min-height: 0;
+  max-height: none;
+  gap: 0;
+  opacity: 0;
+  pointer-events: auto;
+}
+
+.video-first.no-topic.idle-ui-visible .minimal-button-rail.interaction-visible .topic-button {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* The artwork already uses the right half for the five nodes. Keep hook copy
+   higher on the right so it never sits on top of the touch targets. */
+.video-first.no-topic.idle-ui-visible .minimal-idle-copy {
+  left: 73vw;
+  bottom: 54vh;
+  width: min(43vw, 700px);
+}
+
 .idle-hook-copy {
   animation: idleHookCycle 5.6s cubic-bezier(.22,.7,.2,1) both;
   will-change: opacity, transform, filter;
