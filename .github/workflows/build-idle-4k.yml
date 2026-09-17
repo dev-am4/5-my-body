@@ -1,0 +1,81 @@
+name: Build 4K idle projection master
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/media/idle-test.jpg'
+      - '.github/workflows/build-idle-4k.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-idle-4k:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Pillow
+        run: python -m pip install --upgrade pillow
+
+      - name: Build 3840x2160 projection master
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageFilter, ImageStat
+
+          src = Path('public/media/idle-test.jpg')
+          out = Path('public/media/idle-master-4k.jpg')
+          im = Image.open(src).convert('RGB')
+
+          W, H = 3840, 2160
+          scale = min(W / im.width, H / im.height)
+          new_w = round(im.width * scale)
+          new_h = round(im.height * scale)
+
+          up = im.resize((new_w, new_h), Image.Resampling.LANCZOS)
+          # Mild post-resize sharpening only; no content synthesis or redesign.
+          up = up.filter(ImageFilter.UnsharpMask(radius=1.25, percent=115, threshold=3))
+
+          # Preserve the entire source composition without cropping. The source
+          # is slightly wider than 16:9, so only a few pixels of navy padding
+          # are added above/below to make a true UHD 3840x2160 master.
+          sample = im.crop((int(im.width * 0.72), 0, im.width, max(1, im.height // 5)))
+          stat = ImageStat.Stat(sample)
+          fill = tuple(round(v) for v in stat.mean[:3])
+          canvas = Image.new('RGB', (W, H), fill)
+          x = (W - new_w) // 2
+          y = (H - new_h) // 2
+          canvas.paste(up, (x, y))
+
+          canvas.save(
+              out,
+              'JPEG',
+              quality=96,
+              subsampling=0,
+              optimize=True,
+              progressive=True,
+          )
+          print(f'{src}: {im.width}x{im.height}')
+          print(f'{out}: {canvas.width}x{canvas.height}, {out.stat().st_size} bytes')
+          PY
+
+      - name: Commit generated 4K master
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/media/idle-master-4k.jpg
+          if git diff --cached --quiet; then
+            echo '4K master is already current.'
+            exit 0
+          fi
+          git commit -m 'Build 4K idle projection master [skip idle4k]'
+          git push
