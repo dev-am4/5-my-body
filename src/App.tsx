@@ -7,8 +7,41 @@ type Clip = {
   topicId: TopicId | null
 }
 
+type IdleHook = {
+  title: string
+  subtitle: string
+}
+
 const IDLE_VIDEO = '/media/00_IDLE_LOOP.mp4'
 const STORY_END_OVERLAP_SECONDS = 0.16
+const IDLE_HOOK_DURATION_MS = 5600
+
+const IDLE_HOOKS: IdleHook[] = [
+  {
+    title: 'ในร่างกายของคุณ… กำลังเกิดอะไรขึ้นอยู่ตอนนี้?',
+    subtitle: 'แตะเพื่อค้นพบ',
+  },
+  {
+    title: 'ทุกลมหายใจ ทุกความคิด ทุกจังหวะหัวใจ มีวิทยาศาสตร์อยู่เบื้องหลัง',
+    subtitle: 'แตะหนึ่งจุดเพื่อเริ่มสำรวจ',
+  },
+  {
+    title: 'สมอง หัวใจ ลำไส้ และเซลล์ กำลังทำงานพร้อมกันเสมอ',
+    subtitle: 'ลองแตะดูว่าระบบไหนทำงานอย่างไร',
+  },
+  {
+    title: 'สุขภาพ ไม่ได้มีแค่สิ่งที่มองเห็น',
+    subtitle: 'แตะเพื่อมองลึกเข้าไปข้างใน',
+  },
+  {
+    title: 'ร่างกายของเรา ซับซ้อนกว่าที่คิด',
+    subtitle: 'เลือกหนึ่งจุด แล้วเริ่มเรียนรู้',
+  },
+  {
+    title: 'ลองแตะ แล้วดูว่าข้างในร่างกายมีอะไรซ่อนอยู่',
+    subtitle: 'เริ่มได้เลยด้านล่าง',
+  },
+]
 
 const STORY_MEDIA: Record<TopicId, string> = {
   brain: '/media/01_BRAIN.mp4',
@@ -52,8 +85,6 @@ function App() {
   )
 
   const selectTopic = useCallback((topic: BodyTopic) => {
-    // Immediate switching is intentional. The A/B video deck keeps the current
-    // film visible until the newly selected film is decoded and ready to play.
     setSelectedId(topic.id)
     setPlayKey((value) => value + 1)
   }, [])
@@ -64,7 +95,6 @@ function App() {
   }, [])
 
   const handleStoryEnd = useCallback((topicId: TopicId) => {
-    // Ignore a late ended event from a film the visitor has already switched away from.
     setSelectedId((current) => (current === topicId ? null : current))
   }, [])
 
@@ -211,8 +241,6 @@ function SequencePlayer({
         frontDeckRef.current = nextDeck
         setFrontDeck(nextDeck)
 
-        // Keep the old film running underneath the new one briefly.
-        // This masks decoder/start-frame differences and avoids a black flash.
         window.setTimeout(() => outgoing?.pause(), 240)
       } catch {
         setFailedSrc(clip.src)
@@ -279,14 +307,7 @@ function MinimalBrand({ topic }: { topic: BodyTopic | null }) {
 }
 
 function MinimalStory({ topic }: { topic: BodyTopic | null }) {
-  if (!topic) {
-    return (
-      <div className="minimal-idle-copy">
-        <h1>แตะหนึ่งปุ่ม แล้วมองเข้าไปในร่างกาย</h1>
-        <p>เลือกเรื่องที่อยากรู้ได้ทันที</p>
-      </div>
-    )
-  }
+  if (!topic) return <IdleHookStory />
 
   const caption = STORY_CAPTIONS[topic.id]
   return (
@@ -294,6 +315,29 @@ function MinimalStory({ topic }: { topic: BodyTopic | null }) {
       <small>0{topic.number} · {topic.nameEn}</small>
       <h2>{caption.title}</h2>
       <p>{caption.fact}</p>
+    </div>
+  )
+}
+
+function IdleHookStory() {
+  const [hookIndex, setHookIndex] = useState(0)
+  const hook = IDLE_HOOKS[hookIndex]
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setHookIndex((current) => (current + 1) % IDLE_HOOKS.length)
+    }, IDLE_HOOK_DURATION_MS)
+
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="minimal-idle-copy idle-hook-copy" key={hookIndex}>
+      <h1>{hook.title}</h1>
+      <p>
+        <span className="idle-hook-dot" aria-hidden="true" />
+        {hook.subtitle}
+      </p>
     </div>
   )
 }
