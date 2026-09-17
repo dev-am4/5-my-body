@@ -1,67 +1,61 @@
-# 5 MY BODY — CINEMATIC MEDIA CONTRACT
+# 5 MY BODY — SIMPLE VIDEO CONTRACT
 
-โปรเจกต์นี้ออกแบบเป็น **Video-first Interactive Projection** เว็บทำหน้าที่รับปุ่ม คุม state, preload และ crossfade วิดีโอเท่านั้น
-
-## ชื่อไฟล์ที่ระบบเรียกใช้
+โปรเจกต์นี้ใช้โครงสร้างหลักเพียง **6 วิดีโอ** เพื่อให้ทำงานง่ายและเปลี่ยนเรื่องได้ทันที
 
 ```text
-00_IDLE_LOOP.mp4
-
-01_BRAIN_IN.mp4
-01_BRAIN_LOOP.mp4
-01_BRAIN_OUT.mp4
-
-02_HEART_IN.mp4
-02_HEART_LOOP.mp4
-02_HEART_OUT.mp4
-
-03_DIGESTION_IN.mp4
-03_DIGESTION_LOOP.mp4
-03_DIGESTION_OUT.mp4
-
-04_PUBLIC_HEALTH_IN.mp4
-04_PUBLIC_HEALTH_LOOP.mp4
-04_PUBLIC_HEALTH_OUT.mp4
-
-05_DNA_IN.mp4
-05_DNA_LOOP.mp4
-05_DNA_OUT.mp4
+00_IDLE_LOOP.mp4          # หน้าหลัก วนลูปตลอด
+01_BRAIN.mp4              # สมองและใจ
+02_HEART.mp4              # หัวใจและการเคลื่อนไหว
+03_DIGESTION.mp4          # ระบบย่อยอาหาร
+04_PUBLIC_HEALTH.mp4      # สุขภาพรอบตัวเรา
+05_DNA.mp4                # เซลล์และ DNA
 ```
 
-## กฎสำคัญเรื่องความเนียน
-
-ทุกหัวข้อต้องต่อเฟรมตาม chain นี้:
+## พฤติกรรมของระบบ
 
 ```text
-IDLE reference frame
-  → TOPIC_IN first frame
-  → TOPIC_IN last frame = TOPIC_LOOP first frame
-  → TOPIC_LOOP ต้องวนลูปได้เนียน
-  → TOPIC_OUT first frame ต้องเข้ากับสถานะ TOPIC_LOOP
-  → TOPIC_OUT last frame = IDLE reference frame
+เปิดระบบ
+  -> 00_IDLE_LOOP วนลูป
+
+กดปุ่ม 1–5
+  -> เล่นวิดีโอเรื่องนั้นทันที
+  -> เล่นครั้งเดียวจนจบ
+  -> กลับ 00_IDLE_LOOP อัตโนมัติ
 ```
 
-ห้ามเจนแต่ละคลิปแยกกันด้วย text prompt อย่างเดียว ให้เอา **last frame ของคลิปก่อนหน้าเป็น start/reference frame ของคลิปถัดไป** เพื่อคุมคน มุมกล้อง แสง สัดส่วน และตำแหน่งให้คงที่
+ถ้าระหว่างดูวิดีโอย่อย ผู้ชมกดเรื่องอื่น:
 
-## Export baseline สำหรับเครื่องนิทรรศการ
+```text
+CURRENT STORY -> NEXT STORY ทันที
+```
 
-- Container: MP4
-- Codec: H.264 High Profile
-- Resolution: 3840×2160 สำหรับ final, 1920×1080 สำหรับ prototype
-- Frame rate: 30 fps แบบ Constant Frame Rate
-- Pixel format: yuv420p
-- ไม่มีเสียงฝังในไฟล์ภาพ (แยก VO/SFX ภายหลัง)
-- Keyframe interval: 1 วินาทีหรือน้อยกว่า (`keyint <= 30` ที่ 30 fps)
-- Fast Start / moov atom อยู่ต้นไฟล์
+ไม่ต้องรอเรื่องเดิมจบ และไม่ต้องผ่านหน้า Idle ก่อน
+
+## ความเนียนของรอยต่อ
+
+เว็บใช้ A/B video deck สองชั้น วิดีโอเดิมจะยังคงอยู่จนวิดีโอใหม่ decode และพร้อมเล่น จากนั้น crossfade สั้น ๆ เพื่อหลบ black frame
+
+ตอนวิดีโอย่อยใกล้จบ ระบบจะเรียก Idle ก่อนจบประมาณ 0.16 วินาที เพื่อให้เฟรมท้ายของเรื่องย่อยซ้อนกับเฟรมเริ่มของ Idle เล็กน้อย
+
+อย่างไรก็ตาม ความไร้รอยต่อที่ดีที่สุดต้องมาจากไฟล์วิดีโอด้วย:
+
+- ทุกเรื่องควรเริ่มจาก visual language เดียวกับ Idle
+- ทุกเรื่องควรจบใน composition ที่กลับเข้าหา Idle ได้
+- black level, exposure, lens, scale และตำแหน่งร่างกายควรคงที่
+- ห้าม fade to black
+- ห้ามฝังข้อความหรือ UI ในวิดีโอ
+- ใช้ visual transition เช่น scan, blood flow, neural pulse, cellular zoom เพื่อเชื่อมภาพ
+
+## Export baseline
+
+- MP4
+- H.264 High Profile
+- 3840×2160 final / 1920×1080 prototype
+- 30 fps Constant Frame Rate
+- yuv420p
+- Keyframe interval 1 วินาทีหรือน้อยกว่า
+- Fast Start
 - หลีกเลี่ยง Variable Frame Rate
-
-## Playback ที่เว็บทำให้แล้ว
-
-- ใช้ video deck A/B ซ้อนกัน 2 ชั้น
-- เปิดคลิปใหม่หลัง `canplay` แล้ว crossfade ประมาณ 360 ms
-- preload `00_IDLE_LOOP` และ `*_IN` ทุกหัวข้อตั้งแต่เริ่ม
-- preload `*_LOOP` และ `*_OUT` ต่อหลังจากนั้น
-- ถ้า media ยังไม่มี จะ fallback เป็น body vector เพื่อทดสอบ interaction ก่อน
 
 ## ปุ่มจริง / Keyboard test
 
@@ -70,7 +64,7 @@ IDLE reference frame
 - `3` Digestion
 - `4` Public Health
 - `5` Cells / DNA
-- `0` หรือ `Esc` = Return to Idle
+- `0` หรือ `Esc` = กลับ Idle ทันที
 - `F` = Fullscreen
 
-สำหรับหน้างานจริงควรวางไฟล์ทั้งหมดไว้บน **Local SSD** และรันแบบ kiosk ไม่ stream วิดีโอผ่านอินเทอร์เน็ต
+สำหรับหน้างานจริงควรวางทั้ง 6 ไฟล์ไว้บน Local SSD และรันแบบ kiosk ไม่ stream ผ่านอินเทอร์เน็ต
