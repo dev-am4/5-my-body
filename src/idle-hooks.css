@@ -71,7 +71,7 @@
    show this image 1:1 as the idle visual. The five buttons already exist in the
    artwork, so the DOM controls become invisible hit-zones aligned on top. */
 .video-first.no-topic .cinema-layer.media-fallback {
-  background: #061424 url('/media/idle-test.webp') center center / cover no-repeat;
+  background: #061424 url('/media/idle-test.jpg') center center / cover no-repeat;
 }
 
 .video-first.no-topic .cinema-layer.media-fallback .fallback-stage {
