@@ -67,11 +67,15 @@
   width: 23vw;
 }
 
-/* Test artwork supplied by the user. While the final idle MP4 is not present,
-   show this image 1:1 as the idle visual. The five buttons already exist in the
-   artwork, so the DOM controls become invisible hit-zones aligned on top. */
+/* 4K projection master generated from the user's exact source artwork.
+   It preserves the source composition, uses UHD 3840x2160, and avoids browser
+   upscaling of the original 1376x768 image on Full HD / 4K outputs. */
 .video-first.no-topic .cinema-layer.media-fallback {
-  background: #061424 url('/media/idle-test.jpg') center center / cover no-repeat;
+  background-color: #061424;
+  background-image: url('/media/idle-master-4k.jpg');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 
 .video-first.no-topic .cinema-layer.media-fallback .fallback-stage {
