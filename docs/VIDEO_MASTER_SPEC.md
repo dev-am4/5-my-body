@@ -1,89 +1,109 @@
 # 5 MY BODY — VIDEO MASTER SPEC
 
-เป้าหมาย: ให้ผู้ชมรู้สึกว่ากำลังดูภาพยนตร์เชิงวิทยาศาสตร์แบบ Interactive บนผนัง ไม่ใช่เว็บ UI
+เป้าหมาย: ให้ผู้ชมรู้สึกว่ากำลังดู **Interactive Film บนผนัง** ไม่ใช่เว็บ UI
 
-## หลักการภาพ
+## โครงสร้างหลัก
 
-- Video-first: ภาพเคลื่อนไหวกินพื้นที่จอเกือบทั้งหมด
-- UI มีเฉพาะชื่อหัวข้อสั้น ๆ, fact 1 ประโยค และตำแหน่งปุ่มจริง
-- ห้ามใส่ข้อความ โลโก้ ปุ่ม หรือ HUD ลงในไฟล์วิดีโอ
-- กล้อง, scale, lens, body position, lighting และ background ต้องคงที่ข้ามทุก segment
-- ใช้ Master Human คนเดียวตลอดทั้งชุด
-- ไม่ใช้ fade to black ระหว่าง segment
-- ทุกการเปลี่ยนฉากต้องเกิดจาก motion ในโลกเดียวกัน เช่น scan, blood flow, neural pulse, cellular zoom หรือ particle transition
+ใช้เพียง 6 วิดีโอ:
+
+```text
+00_IDLE_LOOP.mp4
+01_BRAIN.mp4
+02_HEART.mp4
+03_DIGESTION.mp4
+04_PUBLIC_HEALTH.mp4
+05_DNA.mp4
+```
+
+`00_IDLE_LOOP` คือหน้าหลักและวนลูปตลอดเมื่อไม่มีคนเลือกหัวข้อ
+
+เมื่อกดปุ่ม 1–5 ให้เล่นเรื่องนั้นทันทีแบบ one-shot เมื่อจบกลับ `00_IDLE_LOOP` อัตโนมัติ
+
+หากผู้ชมกดหัวข้ออื่นระหว่างวิดีโอย่อยกำลังเล่น ให้เปลี่ยนไปเรื่องใหม่ทันที ไม่ต้องรอเรื่องเดิมจบและไม่ต้องกลับหน้า Idle ก่อน
 
 ## Playback state
 
 ```text
-00_IDLE_LOOP
-  -> xx_TOPIC_IN
-  -> xx_TOPIC_LOOP
-  -> xx_TOPIC_OUT
-  -> 00_IDLE_LOOP
+IDLE LOOP
+  -> STORY 1/2/3/4/5
+  -> IDLE LOOP
 ```
 
-หากเปลี่ยนจากหัวข้อหนึ่งไปอีกหัวข้อหนึ่งระหว่างใช้งาน:
+หรือเมื่อเปลี่ยนใจระหว่างเรื่อง:
 
 ```text
-CURRENT_LOOP -> CURRENT_OUT -> NEXT_IN -> NEXT_LOOP
+CURRENT STORY
+  -> NEXT STORY immediately
 ```
 
-ห้าม hard-cut CURRENT_LOOP -> NEXT_LOOP
+เว็บใช้ A/B video deck เพื่อให้คลิปเก่ายังอยู่จนคลิปใหม่พร้อมเล่น แล้ว crossfade สั้น ๆ แทนการดับจอ
 
-## Continuity rule — สำคัญที่สุด
+## หลักการภาพ
 
-ทุกคู่คลิปต้องแชร์ภาพต่อเนื่องกันอย่างน้อย 5–8 เฟรมที่ 30 fps
+- Video-first: ภาพเคลื่อนไหวกินพื้นที่จอเกือบทั้งหมด
+- UI มีเฉพาะชื่อหัวข้อสั้น ๆ, key message สั้น ๆ และตำแหน่งปุ่มจริง
+- ห้ามใส่ข้อความ โลโก้ ปุ่ม หรือ HUD ลงในไฟล์วิดีโอ
+- ใช้ visual language เดียวกันทั้ง 6 คลิป
+- กล้อง, scale, lens, body position, lighting และ background ควรคงที่หรือเปลี่ยนอย่างมีเหตุผลต่อเนื่อง
+- ใช้ Master Human คนเดียวตลอดทั้งชุด
+- ไม่ใช้ fade to black ระหว่างเรื่อง
+- การเปลี่ยนฉากควรเกิดจาก motion ในโลกเดียวกัน เช่น scan, blood flow, neural pulse, cellular zoom หรือ particle transition
 
-- เฟรมท้ายของ `00_IDLE_LOOP` ต้องตรงกับเฟรมแรกของทุก `xx_TOPIC_IN`
-- เฟรมท้ายของ `xx_TOPIC_IN` ต้องตรงกับเฟรมแรกของ `xx_TOPIC_LOOP`
-- เฟรมท้ายของ `xx_TOPIC_LOOP` ต้องสามารถวนกลับเฟรมแรกของตัวเองได้
-- เฟรมท้ายของ `xx_TOPIC_OUT` ต้องตรงกับเฟรมเริ่มต้นของ `00_IDLE_LOOP`
-- สำหรับ AI generation ให้ใช้ Last Frame ของคลิปก่อนหน้าเป็น Start Frame / Reference ของคลิปถัดไปเสมอ
+## Continuity rule
+
+เป้าหมายคือให้ทุกเรื่องสามารถเข้าและออกจาก `00_IDLE_LOOP` ได้โดยไม่รู้สึกว่าคนละชิ้น
+
+- เฟรมต้นของแต่ละ Story ควรมีองค์ประกอบที่สัมพันธ์กับ Idle
+- เฟรมท้ายของแต่ละ Story ควรกลับเข้าสู่ composition ที่ใกล้ Idle
+- black level และ exposure ต้องใกล้กันทุกคลิป
+- หลีกเลี่ยง scene relighting, camera shake, focus breathing และการเปลี่ยนสเกลแบบกระโดด
+- หากเจนด้วย AI ให้ใช้ภาพ Master และ reference frame เดียวกันทั้ง 6 คลิป
+
+ระบบจะเริ่มกลับ Idle ก่อน Story จบประมาณ 0.16 วินาที เพื่อให้มี overlap เล็กน้อยและลด black frame
 
 ## Master technical spec
 
-- Master: 3840x2160 หรือ resolution จริงของ projection master
+- Master: 3840×2160 หรือ resolution จริงของ projection master
 - Aspect ratio: 16:9 เว้นแต่ mapping หน้างานกำหนดต่างออกไป
 - Frame rate: Constant 30 fps
 - Delivery: MP4 / H.264 High Profile
-- Audio: ไม่มีเสียงในไฟล์ภาพหลัก; แยก VO/SFX เพื่อควบคุมหน้างาน
+- Pixel format: yuv420p
+- Audio: แนะนำแยก VO/SFX เพื่อควบคุมหน้างาน
 - Background: deep black / very dark cinematic environment
-- First/last-frame exposure และ black level ต้องเท่ากัน
-- หลีกเลี่ยง automatic exposure, camera shake, focus breathing และ scene relighting
+- Keyframe interval: 1 วินาทีหรือน้อยกว่า
+- Fast Start / moov atom อยู่ต้นไฟล์
+- หลีกเลี่ยง Variable Frame Rate
 
-## Segment timing
+## Timing แนะนำ
 
-- `00_IDLE_LOOP`: 12–16 s seamless loop
-- `TOPIC_IN`: 4–8 s
-- `TOPIC_LOOP`: 12–20 s seamless loop
-- `TOPIC_OUT`: 4–8 s
+- `00_IDLE_LOOP`: 10–16 วินาที seamless loop
+- วิดีโอย่อยแต่ละเรื่อง: ประมาณ 15–30 วินาที
 
-เว็บมี A/B video deck และเริ่ม segment ถัดไปประมาณ 0.16 วินาทีก่อน segment ปัจจุบันจบ เพื่อให้มี overlap และลด black frame ที่รอยต่อ
+วิดีโอย่อยไม่จำเป็นต้อง loop เพราะเล่นครั้งเดียวแล้วกลับหน้าหลัก
 
 ## Visual story by topic
 
 ### 01 Brain & Mind
-Idle human -> neural pulse at brain -> body shifts aside -> neural network / sleep / emotion visualization -> return to same human pose.
+เริ่มจากร่างกาย -> สมองและเครือข่ายประสาทตอบสนอง -> แสดงการนอน/อารมณ์/การสื่อสารของสมอง -> กลับสู่ภาพรวมของร่างกาย
 
 ### 02 Heart & Body
-Idle human -> heartbeat pulse -> blood-flow illumination -> circulation / movement visualization -> return.
+เริ่มจากร่างกาย -> heartbeat pulse -> blood flow -> circulation / movement -> กลับสู่ภาพรวมของร่างกาย
 
 ### 03 Digestion
-Idle human -> digestive tract activates -> food-to-nutrient journey -> absorption visualization -> return.
+เริ่มจากร่างกาย -> ระบบย่อยอาหารทำงาน -> การย่อยและดูดซึม -> พลังงานและสารอาหาร -> กลับสู่ภาพรวมของร่างกาย
 
 ### 04 Public Health
-Idle human -> protective field / airborne particles -> individual expands to environment/community relationship -> return.
+เริ่มจากคนหนึ่งคน -> มือ/อากาศ/น้ำ/สิ่งแวดล้อม -> การป้องกันและความเชื่อมโยงระดับชุมชน -> กลับสู่คนหนึ่งคน
 
 ### 05 Cells & DNA
-Idle human -> camera dives from body to tissue -> cell -> nucleus -> DNA / lab-scale visualization -> zoom back to the exact idle human.
+เริ่มจากร่างกาย -> เนื้อเยื่อ -> เซลล์ -> nucleus -> DNA / laboratory-scale visualization -> zoom กลับสู่ร่างกาย
 
 ## Text policy
 
-ข้อความบน projection จากเว็บเท่านั้น ไม่ฝังในวิดีโอ
+ข้อความบน projection มาจากเว็บเท่านั้น ไม่ฝังในวิดีโอ
 
-หนึ่งช่วงควรมีไม่เกิน:
-- ชื่อหัวข้อ 1 บรรทัด
-- Key message 1 บรรทัด
-- Fact สั้น 1 บรรทัด
+หนึ่งช่วงควรมีเพียง:
+- ชื่อหัวข้อสั้น ๆ 1 บรรทัด
+- Key message หรือ Fact สั้น ๆ 1 บรรทัด
 
 ภาพต้องเล่าเรื่องได้แม้ปิดข้อความทั้งหมด
