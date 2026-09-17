@@ -15,8 +15,8 @@ type IdleHook = {
 type VisibleClipTopic = TopicId | null | undefined
 
 const IDLE_VIDEO = '/media/00_IDLE_LOOP.mp4'
-const STORY_END_OVERLAP_SECONDS = 0.28
-const DECK_RELEASE_DELAY_MS = 260
+const STORY_END_OVERLAP_SECONDS = 0.34
+const DECK_RELEASE_DELAY_MS = 380
 const IDLE_HOOK_DURATION_MS = 5600
 
 const IDLE_HOOKS: IdleHook[] = [
@@ -54,29 +54,6 @@ const STORY_MEDIA: Record<TopicId, string> = {
   dna: '/media/05_DNA.mp4',
 }
 
-const STORY_CAPTIONS: Record<TopicId, { title: string; fact: string }> = {
-  brain: {
-    title: 'สมองกำลังคุยกับทั้งร่างกาย',
-    fact: 'การนอนที่เพียงพอช่วยให้สมองพร้อมเรียนรู้ จดจำ และจัดการอารมณ์',
-  },
-  heart: {
-    title: 'ทุกจังหวะ ส่งชีวิตไปทั่วร่างกาย',
-    fact: 'หัวใจสูบเลือดเพื่อนำออกซิเจนและสารอาหารไปยังเซลล์ทั่วร่างกาย',
-  },
-  stomach: {
-    title: 'อาหารกำลังกลายเป็นพลังงาน',
-    fact: 'สารอาหารจากอาหารถูกดูดซึมเข้าสู่ร่างกายส่วนใหญ่ที่ลำไส้เล็ก',
-  },
-  aura: {
-    title: 'สุขภาพไม่ได้เกิดขึ้นจากเราคนเดียว',
-    fact: 'มือ น้ำ อากาศ สิ่งแวดล้อม และคนรอบตัว ล้วนเชื่อมโยงกับสุขภาพของเรา',
-  },
-  dna: {
-    title: 'จากร่างกาย สู่เซลล์ สู่ DNA',
-    fact: 'DNA เก็บคำสั่งที่เซลล์ใช้สร้างโปรตีนและควบคุมการทำงานจำนวนมากในร่างกาย',
-  },
-}
-
 function App() {
   const debug = useMemo(() => new URLSearchParams(window.location.search).get('debug') === '1', [])
   const [selectedId, setSelectedId] = useState<TopicId | null>(null)
@@ -88,8 +65,12 @@ function App() {
     [selectedId],
   )
 
+  const idleUiVisible = selectedId === null && visibleClipTopicId === null
+  const filmVisible = visibleClipTopicId !== undefined && visibleClipTopicId !== null
+  const switching = selectedId !== visibleClipTopicId
+
   const selectTopic = useCallback((topic: BodyTopic) => {
-    setSelectedId(topic.id)
+    setSelectedId((current) => (current === topic.id ? null : topic.id))
     setPlayKey((value) => value + 1)
   }, [])
 
@@ -144,7 +125,7 @@ function App() {
 
   return (
     <main
-      className={`exhibit video-first ${selectedTopic ? 'has-topic' : 'no-topic'} ${debug ? 'debug' : ''}`}
+      className={`exhibit video-first ${selectedTopic ? 'has-topic' : 'no-topic'} ${filmVisible ? 'film-active' : ''} ${idleUiVisible ? 'idle-ui-visible' : ''} ${switching ? 'is-switching' : ''} ${debug ? 'debug' : ''}`}
       style={appStyle}
     >
       <PreloadMediaLibrary />
@@ -156,17 +137,24 @@ function App() {
         onClipVisible={handleClipVisible}
       />
 
-      <MinimalBrand topic={selectedTopic} />
-      <MinimalStory topic={selectedTopic} visibleClipTopicId={visibleClipTopicId} />
-      <PhysicalButtonRail selectedId={selectedId} onSelect={selectTopic} />
+      <div className={`idle-ui-layer ${idleUiVisible ? 'visible' : 'hidden'}`} aria-hidden={!idleUiVisible}>
+        <MinimalBrand />
+        <IdleHookStory active={idleUiVisible} />
+      </div>
+
+      <PhysicalButtonRail
+        selectedId={selectedId}
+        visualsVisible={idleUiVisible}
+        onSelect={selectTopic}
+      />
 
       {debug && (
         <div className="debug-overlay" aria-hidden="true">
           <span>PROJECTOR SAFE</span>
-          <span>1 IDLE LOOP + 5 STORY FILMS</span>
-          <span>SHARED REACH ZONE</span>
+          <span>1 IDLE LOOP + 5 FULLSCREEN FILMS</span>
+          <span>{filmVisible ? 'FILM FULLSCREEN · TOUCH ZONES HIDDEN' : 'IDLE · 5 TOUCH ZONES VISIBLE'}</span>
           <span>VISIBLE DECK: {visibleClipTopicId === undefined ? 'BOOT' : visibleClipTopicId ?? 'IDLE'}</span>
-          <span>KEY 1–5 · 0/ESC IDLE · F FULLSCREEN</span>
+          <span>KEY 1–5 TOGGLE · 0/ESC IDLE · F FULLSCREEN</span>
         </div>
       )}
     </main>
@@ -313,54 +301,35 @@ function SequencePlayer({
   )
 }
 
-function MinimalBrand({ topic }: { topic: BodyTopic | null }) {
+function MinimalBrand() {
   return (
     <header className="minimal-brand" aria-hidden="true">
       <span>SCIENCE FOR HEALTH · KHON KAEN</span>
       <i />
-      <strong>{topic ? topic.nameEn : 'INSIDE YOUR BODY'}</strong>
+      <strong>INSIDE YOUR BODY</strong>
     </header>
   )
 }
 
-function MinimalStory({
-  topic,
-  visibleClipTopicId,
-}: {
-  topic: BodyTopic | null
-  visibleClipTopicId: VisibleClipTopic
-}) {
-  if (!topic) {
-    if (visibleClipTopicId !== null) return null
-    return <IdleHookStory />
-  }
-
-  if (visibleClipTopicId !== topic.id) return null
-
-  const caption = STORY_CAPTIONS[topic.id]
-  return (
-    <div className="minimal-caption">
-      <small>0{topic.number} · {topic.nameEn}</small>
-      <h2>{caption.title}</h2>
-      <p>{caption.fact}</p>
-    </div>
-  )
-}
-
-function IdleHookStory() {
+function IdleHookStory({ active }: { active: boolean }) {
   const [hookIndex, setHookIndex] = useState(0)
   const hook = IDLE_HOOKS[hookIndex]
 
   useEffect(() => {
+    if (!active) {
+      setHookIndex(0)
+      return
+    }
+
     const timer = window.setInterval(() => {
       setHookIndex((current) => (current + 1) % IDLE_HOOKS.length)
     }, IDLE_HOOK_DURATION_MS)
 
     return () => window.clearInterval(timer)
-  }, [])
+  }, [active])
 
   return (
-    <div className="minimal-idle-copy idle-hook-copy" key={hookIndex}>
+    <div className="minimal-idle-copy idle-hook-copy" key={`${active ? 'on' : 'off'}-${hookIndex}`}>
       <h1>{hook.title}</h1>
       <p>
         <span className="idle-hook-dot" aria-hidden="true" />
@@ -402,13 +371,18 @@ function FallbackBody({ active, topic }: { active: boolean; topic: BodyTopic | n
 
 function PhysicalButtonRail({
   selectedId,
+  visualsVisible,
   onSelect,
 }: {
   selectedId: TopicId | null
+  visualsVisible: boolean
   onSelect: (topic: BodyTopic) => void
 }) {
   return (
-    <nav className="button-rail minimal-button-rail" aria-label="ปุ่มเลือกเนื้อหา 5 จุด">
+    <nav
+      className={`button-rail minimal-button-rail ${visualsVisible ? 'interaction-visible' : 'interaction-concealed'}`}
+      aria-label="ปุ่มเลือกเนื้อหา 5 จุด"
+    >
       {topics.map((topic) => {
         const active = selectedId === topic.id
         return (
@@ -419,6 +393,7 @@ function PhysicalButtonRail({
             style={{ '--button-accent': topic.accent } as CSSProperties}
             onClick={() => onSelect(topic)}
             aria-pressed={active}
+            aria-label={active ? `${topic.nameTh} — แตะซ้ำเพื่อกลับหน้าหลัก` : `เปิด ${topic.nameTh}`}
           >
             <span className="button-number">0{topic.number}</span>
             <span className="button-copy">
