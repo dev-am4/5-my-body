@@ -1,51 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { topics, type BodyTopic, type TopicId } from './data'
 
-type Phase = 'idle' | 'entering' | 'active' | 'exiting'
-
-type MediaSet = {
-  in: string
-  loop: string
-  out: string
-}
-
-type Caption = {
-  title: string
-  fact: string
+type Clip = {
+  src: string
+  loop: boolean
+  topicId: TopicId | null
 }
 
 const IDLE_VIDEO = '/media/00_IDLE_LOOP.mp4'
-const SEGMENT_OVERLAP_SECONDS = 0.16
+const STORY_END_OVERLAP_SECONDS = 0.16
 
-const TOPIC_MEDIA: Record<TopicId, MediaSet> = {
-  brain: {
-    in: '/media/01_BRAIN_IN.mp4',
-    loop: '/media/01_BRAIN_LOOP.mp4',
-    out: '/media/01_BRAIN_OUT.mp4',
-  },
-  heart: {
-    in: '/media/02_HEART_IN.mp4',
-    loop: '/media/02_HEART_LOOP.mp4',
-    out: '/media/02_HEART_OUT.mp4',
-  },
-  stomach: {
-    in: '/media/03_DIGESTION_IN.mp4',
-    loop: '/media/03_DIGESTION_LOOP.mp4',
-    out: '/media/03_DIGESTION_OUT.mp4',
-  },
-  aura: {
-    in: '/media/04_PUBLIC_HEALTH_IN.mp4',
-    loop: '/media/04_PUBLIC_HEALTH_LOOP.mp4',
-    out: '/media/04_PUBLIC_HEALTH_OUT.mp4',
-  },
-  dna: {
-    in: '/media/05_DNA_IN.mp4',
-    loop: '/media/05_DNA_LOOP.mp4',
-    out: '/media/05_DNA_OUT.mp4',
-  },
+const STORY_MEDIA: Record<TopicId, string> = {
+  brain: '/media/01_BRAIN.mp4',
+  heart: '/media/02_HEART.mp4',
+  stomach: '/media/03_DIGESTION.mp4',
+  aura: '/media/04_PUBLIC_HEALTH.mp4',
+  dna: '/media/05_DNA.mp4',
 }
 
-const VIDEO_CAPTIONS: Record<TopicId, Caption> = {
+const STORY_CAPTIONS: Record<TopicId, { title: string; fact: string }> = {
   brain: {
     title: 'สมองกำลังคุยกับทั้งร่างกาย',
     fact: 'การนอนที่เพียงพอช่วยให้สมองพร้อมเรียนรู้ จดจำ และจัดการอารมณ์',
@@ -71,9 +44,7 @@ const VIDEO_CAPTIONS: Record<TopicId, Caption> = {
 function App() {
   const debug = useMemo(() => new URLSearchParams(window.location.search).get('debug') === '1', [])
   const [selectedId, setSelectedId] = useState<TopicId | null>(null)
-  const [pendingId, setPendingId] = useState<TopicId | null>(null)
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [sessionKey, setSessionKey] = useState(0)
+  const [playKey, setPlayKey] = useState(0)
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.id === selectedId) ?? null,
@@ -81,60 +52,21 @@ function App() {
   )
 
   const selectTopic = useCallback((topic: BodyTopic) => {
-    setSessionKey((value) => value + 1)
+    // Immediate switching is intentional. The A/B video deck keeps the current
+    // film visible until the newly selected film is decoded and ready to play.
+    setSelectedId(topic.id)
+    setPlayKey((value) => value + 1)
+  }, [])
 
-    if (!selectedId) {
-      setPendingId(null)
-      setSelectedId(topic.id)
-      setPhase('entering')
-      return
-    }
+  const returnToIdle = useCallback(() => {
+    setSelectedId(null)
+    setPlayKey((value) => value + 1)
+  }, [])
 
-    if (selectedId === topic.id) {
-      if (phase === 'exiting') setPhase('entering')
-      return
-    }
-
-    // Never hard-cut from one body system to another.
-    // Finish the current OUT clip first, then enter the next topic.
-    setPendingId(topic.id)
-    setPhase('exiting')
-  }, [phase, selectedId])
-
-  const requestReset = useCallback(() => {
-    setPendingId(null)
-    if (!selectedId) {
-      setPhase('idle')
-      return
-    }
-    setPhase('exiting')
-  }, [selectedId])
-
-  const finishSegment = useCallback(() => {
-    if (phase === 'entering') {
-      setPhase('active')
-      return
-    }
-
-    if (phase === 'exiting') {
-      if (pendingId) {
-        const next = pendingId
-        setPendingId(null)
-        setSelectedId(next)
-        setPhase('entering')
-        setSessionKey((value) => value + 1)
-      } else {
-        setSelectedId(null)
-        setPhase('idle')
-      }
-    }
-  }, [pendingId, phase])
-
-  useEffect(() => {
-    if (phase !== 'active' || !selectedTopic) return
-    const timer = window.setTimeout(requestReset, 36000)
-    return () => window.clearTimeout(timer)
-  }, [phase, requestReset, selectedTopic, sessionKey])
+  const handleStoryEnd = useCallback((topicId: TopicId) => {
+    // Ignore a late ended event from a film the visitor has already switched away from.
+    setSelectedId((current) => (current === topicId ? null : current))
+  }, [])
 
   useEffect(() => {
     const onKeyDown = async (event: KeyboardEvent) => {
@@ -149,7 +81,7 @@ function App() {
 
       if (event.key === 'Escape' || event.key === '0' || event.code === 'Numpad0') {
         event.preventDefault()
-        requestReset()
+        returnToIdle()
         return
       }
 
@@ -166,7 +98,7 @@ function App() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [requestReset, selectTopic])
+  }, [returnToIdle, selectTopic])
 
   const appStyle = {
     '--accent': selectedTopic?.accent ?? '#65e8e2',
@@ -174,27 +106,27 @@ function App() {
 
   return (
     <main
-      className={`exhibit video-first phase-${phase} ${selectedTopic ? 'has-topic' : 'no-topic'} ${debug ? 'debug' : ''}`}
+      className={`exhibit video-first ${selectedTopic ? 'has-topic' : 'no-topic'} ${debug ? 'debug' : ''}`}
       style={appStyle}
     >
       <PreloadMediaLibrary />
 
       <SequencePlayer
-        phase={phase}
         topic={selectedTopic}
-        onSegmentEnd={finishSegment}
+        playKey={playKey}
+        onStoryEnd={handleStoryEnd}
       />
 
       <MinimalBrand topic={selectedTopic} />
-      <MinimalStory topic={selectedTopic} phase={phase} />
+      <MinimalStory topic={selectedTopic} />
       <PhysicalButtonRail selectedId={selectedId} onSelect={selectTopic} />
 
       {debug && (
         <div className="debug-overlay" aria-hidden="true">
           <span>PROJECTOR SAFE</span>
-          <span>VIDEO-FIRST · A/B DECK · 160ms OVERLAP</span>
+          <span>1 IDLE LOOP + 5 STORY FILMS</span>
           <span>SHARED REACH ZONE</span>
-          <span>KEY 1–5 · 0/ESC RETURN · F FULLSCREEN</span>
+          <span>KEY 1–5 · 0/ESC IDLE · F FULLSCREEN</span>
         </div>
       )}
     </main>
@@ -203,11 +135,10 @@ function App() {
 
 function PreloadMediaLibrary() {
   useEffect(() => {
-    const critical = [IDLE_VIDEO, ...topics.map((topic) => TOPIC_MEDIA[topic.id].in)]
-    const secondary = topics.flatMap((topic) => [TOPIC_MEDIA[topic.id].loop, TOPIC_MEDIA[topic.id].out])
+    const sources = [IDLE_VIDEO, ...topics.map((topic) => STORY_MEDIA[topic.id])]
     const keepAlive: HTMLVideoElement[] = []
 
-    const preload = (src: string) => {
+    sources.forEach((src) => {
       const video = document.createElement('video')
       video.preload = 'auto'
       video.muted = true
@@ -215,13 +146,9 @@ function PreloadMediaLibrary() {
       video.src = src
       video.load()
       keepAlive.push(video)
-    }
-
-    critical.forEach(preload)
-    const timer = window.setTimeout(() => secondary.forEach(preload), 700)
+    })
 
     return () => {
-      window.clearTimeout(timer)
       keepAlive.forEach((video) => {
         video.pause()
         video.removeAttribute('src')
@@ -234,13 +161,13 @@ function PreloadMediaLibrary() {
 }
 
 function SequencePlayer({
-  phase,
   topic,
-  onSegmentEnd,
+  playKey,
+  onStoryEnd,
 }: {
-  phase: Phase
   topic: BodyTopic | null
-  onSegmentEnd: () => void
+  playKey: number
+  onStoryEnd: (topicId: TopicId) => void
 }) {
   const deckA = useRef<HTMLVideoElement>(null)
   const deckB = useRef<HTMLVideoElement>(null)
@@ -249,13 +176,10 @@ function SequencePlayer({
   const [mediaVisible, setMediaVisible] = useState(false)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
 
-  const clip = useMemo(() => {
-    if (!topic || phase === 'idle') return { src: IDLE_VIDEO, loop: true }
-    const media = TOPIC_MEDIA[topic.id]
-    if (phase === 'entering') return { src: media.in, loop: false }
-    if (phase === 'exiting') return { src: media.out, loop: false }
-    return { src: media.loop, loop: true }
-  }, [phase, topic])
+  const clip = useMemo<Clip>(() => {
+    if (!topic) return { src: IDLE_VIDEO, loop: true, topicId: null }
+    return { src: STORY_MEDIA[topic.id], loop: false, topicId: topic.id }
+  }, [topic])
 
   useEffect(() => {
     const refs = [deckA.current, deckB.current] as const
@@ -266,7 +190,6 @@ function SequencePlayer({
     if (!incoming) return
 
     let cancelled = false
-    let fallbackTimer = 0
     let advanced = false
 
     incoming.pause()
@@ -277,18 +200,7 @@ function SequencePlayer({
     incoming.src = clip.src
     incoming.currentTime = 0
 
-    const advanceBeforeEnd = () => {
-      if (cancelled || clip.loop || advanced) return
-      if (!Number.isFinite(incoming.duration) || incoming.duration <= 0) return
-
-      const remaining = incoming.duration - incoming.currentTime
-      if (remaining <= SEGMENT_OVERLAP_SECONDS) {
-        advanced = true
-        onSegmentEnd()
-      }
-    }
-
-    const reveal = async () => {
+    const switchToIncoming = async () => {
       if (cancelled) return
       try {
         await incoming.play()
@@ -299,44 +211,51 @@ function SequencePlayer({
         frontDeckRef.current = nextDeck
         setFrontDeck(nextDeck)
 
-        // Keep both decoders alive briefly so segment boundaries overlap instead of flashing black.
-        window.setTimeout(() => outgoing?.pause(), 260)
+        // Keep the old film running underneath the new one briefly.
+        // This masks decoder/start-frame differences and avoids a black flash.
+        window.setTimeout(() => outgoing?.pause(), 240)
       } catch {
         setFailedSrc(clip.src)
         setMediaVisible(false)
-        if (!clip.loop) fallbackTimer = window.setTimeout(onSegmentEnd, 650)
       }
+    }
+
+    const advanceBeforeEnd = () => {
+      if (cancelled || clip.loop || !clip.topicId || advanced) return
+      if (!Number.isFinite(incoming.duration) || incoming.duration <= 0) return
+
+      if (incoming.duration - incoming.currentTime <= STORY_END_OVERLAP_SECONDS) {
+        advanced = true
+        onStoryEnd(clip.topicId)
+      }
+    }
+
+    const ended = () => {
+      if (cancelled || clip.loop || !clip.topicId || advanced) return
+      advanced = true
+      onStoryEnd(clip.topicId)
     }
 
     const fail = () => {
       if (cancelled) return
       setFailedSrc(clip.src)
       setMediaVisible(false)
-      if (!clip.loop) fallbackTimer = window.setTimeout(onSegmentEnd, 650)
     }
 
-    const ended = () => {
-      if (!cancelled && !clip.loop && !advanced) {
-        advanced = true
-        onSegmentEnd()
-      }
-    }
-
-    incoming.addEventListener('canplay', reveal, { once: true })
+    incoming.addEventListener('canplay', switchToIncoming, { once: true })
     incoming.addEventListener('timeupdate', advanceBeforeEnd)
-    incoming.addEventListener('error', fail, { once: true })
     incoming.addEventListener('ended', ended, { once: true })
+    incoming.addEventListener('error', fail, { once: true })
     incoming.load()
 
     return () => {
       cancelled = true
-      window.clearTimeout(fallbackTimer)
-      incoming.removeEventListener('canplay', reveal)
+      incoming.removeEventListener('canplay', switchToIncoming)
       incoming.removeEventListener('timeupdate', advanceBeforeEnd)
-      incoming.removeEventListener('error', fail)
       incoming.removeEventListener('ended', ended)
+      incoming.removeEventListener('error', fail)
     }
-  }, [clip.loop, clip.src, onSegmentEnd])
+  }, [clip.loop, clip.src, clip.topicId, onStoryEnd, playKey])
 
   return (
     <div className={`cinema-layer ${mediaVisible ? 'media-visible' : 'media-fallback'}`}>
@@ -359,33 +278,22 @@ function MinimalBrand({ topic }: { topic: BodyTopic | null }) {
   )
 }
 
-function MinimalStory({ topic, phase }: { topic: BodyTopic | null; phase: Phase }) {
+function MinimalStory({ topic }: { topic: BodyTopic | null }) {
   if (!topic) {
     return (
       <div className="minimal-idle-copy">
         <h1>แตะหนึ่งปุ่ม แล้วมองเข้าไปในร่างกาย</h1>
-        <p>ร่างกายหนึ่งร่าง · หลายระบบที่ทำงานพร้อมกัน</p>
+        <p>เลือกเรื่องที่อยากรู้ได้ทันที</p>
       </div>
     )
   }
 
-  if (phase !== 'active') {
-    return (
-      <div className="transition-caption">
-        <span>0{topic.number}</span>
-        <strong>{phase === 'exiting' ? 'ทุกระบบเชื่อมถึงกัน' : topic.nameTh}</strong>
-      </div>
-    )
-  }
-
-  const caption = VIDEO_CAPTIONS[topic.id]
-
+  const caption = STORY_CAPTIONS[topic.id]
   return (
-    <div className="minimal-caption" key={topic.id}>
-      <small>{topic.nameTh}</small>
+    <div className="minimal-caption">
+      <small>0{topic.number} · {topic.nameEn}</small>
       <h2>{caption.title}</h2>
       <p>{caption.fact}</p>
-      <span className="minimal-stat">{topic.stat}</span>
     </div>
   )
 }
