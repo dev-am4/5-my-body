@@ -9,7 +9,13 @@ type MediaSet = {
   out: string
 }
 
+type Caption = {
+  title: string
+  fact: string
+}
+
 const IDLE_VIDEO = '/media/00_IDLE_LOOP.mp4'
+const SEGMENT_OVERLAP_SECONDS = 0.16
 
 const TOPIC_MEDIA: Record<TopicId, MediaSet> = {
   brain: {
@@ -39,18 +45,35 @@ const TOPIC_MEDIA: Record<TopicId, MediaSet> = {
   },
 }
 
-const IDLE_LINES = [
-  'ข้างในร่างกายของเรา กำลังเกิดอะไรขึ้น?',
-  'กดหนึ่งปุ่ม แล้วมองร่างกายให้ลึกกว่าเดิม',
-  'จากสิ่งที่รู้สึกได้ ไปจนถึงสิ่งที่ตาเปล่ามองไม่เห็น',
-] as const
+const VIDEO_CAPTIONS: Record<TopicId, Caption> = {
+  brain: {
+    title: 'สมองกำลังคุยกับทั้งร่างกาย',
+    fact: 'การนอนที่เพียงพอช่วยให้สมองพร้อมเรียนรู้ จดจำ และจัดการอารมณ์',
+  },
+  heart: {
+    title: 'ทุกจังหวะ ส่งชีวิตไปทั่วร่างกาย',
+    fact: 'หัวใจสูบเลือดเพื่อนำออกซิเจนและสารอาหารไปยังเซลล์ทั่วร่างกาย',
+  },
+  stomach: {
+    title: 'อาหารกำลังกลายเป็นพลังงาน',
+    fact: 'สารอาหารจากอาหารถูกดูดซึมเข้าสู่ร่างกายส่วนใหญ่ที่ลำไส้เล็ก',
+  },
+  aura: {
+    title: 'สุขภาพไม่ได้เกิดขึ้นจากเราคนเดียว',
+    fact: 'มือ น้ำ อากาศ สิ่งแวดล้อม และคนรอบตัว ล้วนเชื่อมโยงกับสุขภาพของเรา',
+  },
+  dna: {
+    title: 'จากร่างกาย สู่เซลล์ สู่ DNA',
+    fact: 'DNA เก็บคำสั่งที่เซลล์ใช้สร้างโปรตีนและควบคุมการทำงานจำนวนมากในร่างกาย',
+  },
+}
 
 function App() {
   const debug = useMemo(() => new URLSearchParams(window.location.search).get('debug') === '1', [])
   const [selectedId, setSelectedId] = useState<TopicId | null>(null)
+  const [pendingId, setPendingId] = useState<TopicId | null>(null)
   const [phase, setPhase] = useState<Phase>('idle')
-  const [idleLine, setIdleLine] = useState(0)
-  const [interactionKey, setInteractionKey] = useState(0)
+  const [sessionKey, setSessionKey] = useState(0)
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.id === selectedId) ?? null,
@@ -58,12 +81,28 @@ function App() {
   )
 
   const selectTopic = useCallback((topic: BodyTopic) => {
-    setSelectedId(topic.id)
-    setPhase('entering')
-    setInteractionKey((value) => value + 1)
-  }, [])
+    setSessionKey((value) => value + 1)
+
+    if (!selectedId) {
+      setPendingId(null)
+      setSelectedId(topic.id)
+      setPhase('entering')
+      return
+    }
+
+    if (selectedId === topic.id) {
+      if (phase === 'exiting') setPhase('entering')
+      return
+    }
+
+    // Never hard-cut from one body system to another.
+    // Finish the current OUT clip first, then enter the next topic.
+    setPendingId(topic.id)
+    setPhase('exiting')
+  }, [phase, selectedId])
 
   const requestReset = useCallback(() => {
+    setPendingId(null)
     if (!selectedId) {
       setPhase('idle')
       return
@@ -72,29 +111,30 @@ function App() {
   }, [selectedId])
 
   const finishSegment = useCallback(() => {
-    setPhase((current) => {
-      if (current === 'entering') return 'active'
-      if (current === 'exiting') {
-        window.setTimeout(() => setSelectedId(null), 0)
-        return 'idle'
-      }
-      return current
-    })
-  }, [])
+    if (phase === 'entering') {
+      setPhase('active')
+      return
+    }
 
-  useEffect(() => {
-    if (selectedTopic) return
-    const timer = window.setInterval(() => {
-      setIdleLine((current) => (current + 1) % IDLE_LINES.length)
-    }, 5200)
-    return () => window.clearInterval(timer)
-  }, [selectedTopic])
+    if (phase === 'exiting') {
+      if (pendingId) {
+        const next = pendingId
+        setPendingId(null)
+        setSelectedId(next)
+        setPhase('entering')
+        setSessionKey((value) => value + 1)
+      } else {
+        setSelectedId(null)
+        setPhase('idle')
+      }
+    }
+  }, [pendingId, phase])
 
   useEffect(() => {
     if (phase !== 'active' || !selectedTopic) return
     const timer = window.setTimeout(requestReset, 36000)
     return () => window.clearTimeout(timer)
-  }, [phase, selectedTopic, interactionKey, requestReset])
+  }, [phase, requestReset, selectedTopic, sessionKey])
 
   useEffect(() => {
     const onKeyDown = async (event: KeyboardEvent) => {
@@ -119,7 +159,7 @@ function App() {
           if (document.fullscreenElement) await document.exitFullscreen()
           else await document.documentElement.requestFullscreen()
         } catch {
-          // Kiosk/browser policy may block fullscreen.
+          // Fullscreen can be restricted by kiosk/browser policy.
         }
       }
     }
@@ -134,11 +174,10 @@ function App() {
 
   return (
     <main
-      className={`exhibit phase-${phase} ${selectedTopic ? 'has-topic' : 'no-topic'} ${debug ? 'debug' : ''}`}
+      className={`exhibit video-first phase-${phase} ${selectedTopic ? 'has-topic' : 'no-topic'} ${debug ? 'debug' : ''}`}
       style={appStyle}
     >
       <PreloadMediaLibrary />
-      <Ambient />
 
       <SequencePlayer
         phase={phase}
@@ -146,35 +185,15 @@ function App() {
         onSegmentEnd={finishSegment}
       />
 
-      <header className="exhibit-header">
-        <div className="brand">
-          <span className="brand-orbit" aria-hidden="true" />
-          <div>
-            <small>SCIENCE FOR HEALTH · KHON KAEN</small>
-            <strong>INSIDE YOUR BODY</strong>
-          </div>
-        </div>
-        <div className="header-state">
-          <span className="live-dot" />
-          {selectedTopic ? `${String(selectedTopic.number).padStart(2, '0')} · ${selectedTopic.nameEn}` : 'READY TO EXPLORE'}
-        </div>
-      </header>
-
-      <section className="story-layer">
-        {!selectedTopic ? (
-          <IdleContent line={IDLE_LINES[idleLine]} />
-        ) : (
-          <KnowledgeOverlay topic={selectedTopic} phase={phase} key={`${selectedTopic.id}-${interactionKey}`} />
-        )}
-      </section>
-
+      <MinimalBrand topic={selectedTopic} />
+      <MinimalStory topic={selectedTopic} phase={phase} />
       <PhysicalButtonRail selectedId={selectedId} onSelect={selectTopic} />
 
       {debug && (
         <div className="debug-overlay" aria-hidden="true">
           <span>PROJECTOR SAFE</span>
-          <span>VIDEO-FIRST MODE · A/B DECK</span>
-          <span>PHYSICAL BUTTON ZONE</span>
+          <span>VIDEO-FIRST · A/B DECK · 160ms OVERLAP</span>
+          <span>SHARED REACH ZONE</span>
           <span>KEY 1–5 · 0/ESC RETURN · F FULLSCREEN</span>
         </div>
       )}
@@ -199,7 +218,7 @@ function PreloadMediaLibrary() {
     }
 
     critical.forEach(preload)
-    const timer = window.setTimeout(() => secondary.forEach(preload), 1200)
+    const timer = window.setTimeout(() => secondary.forEach(preload), 700)
 
     return () => {
       window.clearTimeout(timer)
@@ -248,6 +267,7 @@ function SequencePlayer({
 
     let cancelled = false
     let fallbackTimer = 0
+    let advanced = false
 
     incoming.pause()
     incoming.loop = clip.loop
@@ -257,16 +277,30 @@ function SequencePlayer({
     incoming.src = clip.src
     incoming.currentTime = 0
 
+    const advanceBeforeEnd = () => {
+      if (cancelled || clip.loop || advanced) return
+      if (!Number.isFinite(incoming.duration) || incoming.duration <= 0) return
+
+      const remaining = incoming.duration - incoming.currentTime
+      if (remaining <= SEGMENT_OVERLAP_SECONDS) {
+        advanced = true
+        onSegmentEnd()
+      }
+    }
+
     const reveal = async () => {
       if (cancelled) return
       try {
         await incoming.play()
         if (cancelled) return
+
         setFailedSrc(null)
         setMediaVisible(true)
         frontDeckRef.current = nextDeck
         setFrontDeck(nextDeck)
-        window.setTimeout(() => outgoing?.pause(), 420)
+
+        // Keep both decoders alive briefly so segment boundaries overlap instead of flashing black.
+        window.setTimeout(() => outgoing?.pause(), 260)
       } catch {
         setFailedSrc(clip.src)
         setMediaVisible(false)
@@ -282,10 +316,14 @@ function SequencePlayer({
     }
 
     const ended = () => {
-      if (!cancelled && !clip.loop) onSegmentEnd()
+      if (!cancelled && !clip.loop && !advanced) {
+        advanced = true
+        onSegmentEnd()
+      }
     }
 
     incoming.addEventListener('canplay', reveal, { once: true })
+    incoming.addEventListener('timeupdate', advanceBeforeEnd)
     incoming.addEventListener('error', fail, { once: true })
     incoming.addEventListener('ended', ended, { once: true })
     incoming.load()
@@ -294,6 +332,7 @@ function SequencePlayer({
       cancelled = true
       window.clearTimeout(fallbackTimer)
       incoming.removeEventListener('canplay', reveal)
+      incoming.removeEventListener('timeupdate', advanceBeforeEnd)
       incoming.removeEventListener('error', fail)
       incoming.removeEventListener('ended', ended)
     }
@@ -304,104 +343,50 @@ function SequencePlayer({
       <video ref={deckA} className={`video-deck ${frontDeck === 0 && mediaVisible ? 'front' : ''}`} />
       <video ref={deckB} className={`video-deck ${frontDeck === 1 && mediaVisible ? 'front' : ''}`} />
       <div className="video-vignette" />
-      <div className="transition-sweep" />
       {!mediaVisible && <FallbackBody active={Boolean(topic)} topic={topic} />}
       {failedSrc && <span className="media-missing" aria-hidden="true">MEDIA PLACEHOLDER</span>}
     </div>
   )
 }
 
-function Ambient() {
+function MinimalBrand({ topic }: { topic: BodyTopic | null }) {
   return (
-    <div className="ambient" aria-hidden="true">
-      <div className="ambient-grid" />
-      <div className="ambient-glow glow-a" />
-      <div className="ambient-gllow glow-b" />
-      <div className="micro-dots">
-        {Array.from({ length: 24 }).map((_, index) => (
-          <i key={index} style={{ '--i': index } as CSSProperties} />
-        ))}
-      </div>
-    </div>
+    <header className="minimal-brand" aria-hidden="true">
+      <span>SCIENCE FOR HEALTH · KHON KAEN</span>
+      <i />
+      <strong>{topic ? topic.nameEn : 'INSIDE YOUR BODY'}</strong>
+    </header>
   )
 }
 
-function IdleContent({ line }: { line: string }) {
-  return (
-    <div className="idle-copy" key={line}>
-      <p>ร่างกายหนึ่งร่าง · วิทยาศาสตร์นับไม่ถ้วน</p>
-      <h1>{line}</h1>
-      <div className="idle-instruction">
-        <span className="pulse-dot" />
-        <strong>กดปุ่มด้านล่างเพื่อปลุกร่างกายให้ตอบสนอง</strong>
+function MinimalStory({ topic, phase }: { topic: BodyTopic | null; phase: Phase }) {
+  if (!topic) {
+    return (
+      <div className="minimal-idle-copy">
+        <h1>แตะหนึ่งปุ่ม แล้วมองเข้าไปในร่างกาย</h1>
+        <p>ร่างกายหนึ่งร่าง · หลายระบบที่ทำงานพร้อมกัน</p>
       </div>
+    )
+  }
+
+  if (phase !== 'active') {
+    return (
+      <div className="transition-caption">
+        <span>0{topic.number}</span>
+        <strong>{phase === 'exiting' ? 'ทุกระบบเชื่อมถึงกัน' : topic.nameTh}</strong>
+      </div>
+    )
+  }
+
+  const caption = VIDEO_CAPTIONS[topic.id]
+
+  return (
+    <div className="minimal-caption" key={topic.id}>
+      <small>{topic.nameTh}</small>
+      <h2>{caption.title}</h2>
+      <p>{caption.fact}</p>
+      <span className="minimal-stat">{topic.stat}</span>
     </div>
-  )
-}
-
-function KnowledgeOverlay({ topic, phase }: { topic: BodyTopic; phase: Phase }) {
-  const pages = useMemo(
-    () => [
-      { kicker: 'รู้ไหม?', title: topic.stat, body: topic.statLabel },
-      { kicker: 'ข้างในกำลังเกิดอะไรขึ้น', title: topic.nameTh, body: topic.hook },
-      { kicker: 'SCIENCE EXPLAINS', title: 'วิทยาศาสตร์ช่วยให้เราเข้าใจ', body: topic.whatHappens },
-      { kicker: 'SCIENCE FOR HEALTH', title: 'ความรู้เปลี่ยนเป็นการดูแล', body: topic.scienceHelps },
-      { kicker: 'ลองกับตัวเอง', title: 'สังเกต · ตั้งคำถาม · ทดลอง', body: topic.tryThis },
-    ],
-    [topic],
-  )
-  const [page, setPage] = useState(0)
-
-  useEffect(() => {
-    if (phase !== 'active') return
-    setPage(0)
-    const timer = window.setInterval(() => setPage((value) => (value + 1) % pages.length), 6200)
-    return () => window.clearInterval(timer)
-  }, [phase, pages.length])
-
-  const content = pages[page]
-
-  return (
-    <article className={`knowledge-overlay phase-${phase}`}>
-      <div className="topic-lockup">
-        <span className="topic-index">0{topic.number}</span>
-        <div>
-          <small>{topic.nameEn}</small>
-          <strong>{topic.fieldTh}</strong>
-        </div>
-      </div>
-
-      {phase === 'entering' ? (
-        <div className="activation-copy">
-          <small>ACTIVATING</small>
-          <h2>{topic.nameTh}</h2>
-        </div>
-      ) : phase === 'exiting' ? (
-        <div className="activation-copy returning">
-          <small>RETURNING TO BODY</small>
-          <h2>ทุกระบบเชื่อมถึงกัน</h2>
-        </div>
-      ) : (
-        <div className="fact-story" key={page}>
-          <p>{content.kicker}</p>
-          <h2>{content.title}</h2>
-          <div className="story-rule" />
-          <p className="story-body">{content.body}</p>
-          <div className="page-dots" aria-hidden="true">
-            {pages.map((_, index) => <i key={index} className={index === page ? 'active' : ''} />)}
-          </div>
-        </div>
-      )}
-
-      <div className="journey-line">
-        <small>เรียนรู้ต่อ</small>
-        <div>
-          {topic.nextPath.map((item, index) => (
-            <span key={item}>{item}{index < topic.nextPath.length - 1 ? '  →  ' : ''}</span>
-          ))}
-        </div>
-      </div>
-    </article>
   )
 }
 
@@ -443,7 +428,7 @@ function PhysicalButtonRail({
   onSelect: (topic: BodyTopic) => void
 }) {
   return (
-    <nav className="button-rail" aria-label="ปุ่มเลือกเนื้อหา 5 จุด">
+    <nav className="button-rail minimal-button-rail" aria-label="ปุ่มเลือกเนื้อหา 5 จุด">
       {topics.map((topic) => {
         const active = selectedId === topic.id
         return (
