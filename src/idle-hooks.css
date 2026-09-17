@@ -190,7 +190,7 @@
   }
 
   .video-first.no-topic .fallback-stage {
-    inset-right: 56vw;
+    right: 56vw;
   }
 }
 
