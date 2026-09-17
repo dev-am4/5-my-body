@@ -1,0 +1,128 @@
+/* Reachable physical-button zone
+   Keeps all 5 interaction targets inside the child/adult shared reach band. */
+
+.button-rail {
+  left: 3.4vw;
+  right: 3.4vw;
+  bottom: 20vh;
+  height: 17vh;
+  min-height: 132px;
+  max-height: 180px;
+  gap: .9vw;
+  align-items: stretch;
+}
+
+.topic-button {
+  min-height: 100%;
+  border-radius: 18px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: .75vw;
+  padding: 1.15vh 1vw;
+  background:
+    linear-gradient(180deg, rgba(7, 20, 24, .86), rgba(1, 7, 10, .94));
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, .2),
+    inset 0 1px rgba(255,255,255,.025);
+}
+
+.button-number {
+  font-size: clamp(13px, 1vw, 19px);
+  font-weight: 600;
+}
+
+.button-copy strong {
+  font-size: clamp(12px, .92vw, 17px);
+  line-height: 1.25;
+}
+
+.button-copy small {
+  margin-top: .28rem;
+  font-size: clamp(8px, .58vw, 11px);
+}
+
+.physical-target {
+  width: clamp(58px, 4vw, 82px);
+  min-width: 58px;
+  max-width: 82px;
+  border-width: 1.5px;
+  background: color-mix(in srgb, var(--button-accent) 5%, rgba(0,0,0,.35));
+  box-shadow:
+    0 0 28px color-mix(in srgb, var(--button-accent) 12%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--button-accent) 7%, transparent);
+}
+
+.physical-target i {
+  width: 34%;
+  box-shadow:
+    0 0 18px var(--button-accent),
+    0 0 34px color-mix(in srgb, var(--button-accent) 55%, transparent);
+}
+
+/* Move the idle question above the physical reach band so it never competes
+   with the controls. */
+.idle-copy {
+  bottom: 23vh;
+  width: min(70vw, 1080px);
+}
+
+.idle-copy h1 {
+  font-size: clamp(28px, 2.65vw, 54px);
+}
+
+.idle-instruction {
+  margin-top: .7rem;
+}
+
+/* Active content also reserves the same lower reach band. */
+.journey-line {
+  bottom: 21vh;
+}
+
+.media-missing {
+  bottom: 39vh;
+}
+
+/* Calibration explicitly shows the accessible band. */
+.debug .button-rail::before {
+  content: 'SHARED REACH ZONE · CHILD + ADULT';
+  position: absolute;
+  z-index: -1;
+  inset: -1.2vh -.7vw;
+  border: 1px dashed rgba(255,255,255,.28);
+  border-radius: 22px;
+  color: rgba(255,255,255,.42);
+  font-size: 9px;
+  letter-spacing: .14em;
+  padding: .25rem .45rem;
+  pointer-events: none;
+}
+
+.debug::after {
+  inset: 2vh 2vw 38.5vh;
+}
+
+.debug-overlay span:nth-child(3),
+.debug-overlay span:nth-child(4) {
+  bottom: 38.2vh;
+}
+
+@media (max-height: 760px) {
+  .button-rail {
+    bottom: 18.5vh;
+    height: 18vh;
+    min-height: 112px;
+  }
+
+  .physical-target {
+    width: clamp(50px, 3.7vw, 70px);
+    min-width: 50px;
+  }
+
+  .idle-copy {
+    bottom: 24vh;
+  }
+
+  .journey-line {
+    bottom: 22vh;
+  }
+}
