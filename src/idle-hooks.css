@@ -1,0 +1,94 @@
+/* Rotating idle hooks: designed for large projection and minimal UI. */
+
+.idle-hook-copy {
+  animation: idleHookCycle 5.6s cubic-bezier(.22,.7,.2,1) both;
+  will-change: opacity, transform, filter;
+}
+
+.idle-hook-copy h1 {
+  max-width: 1050px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.idle-hook-copy p {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  margin-top: .65rem;
+  color: rgba(232,255,253,.76);
+  font-weight: 500;
+}
+
+.idle-hook-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #69f1e8;
+  box-shadow:
+    0 0 10px rgba(105,241,232,.9),
+    0 0 24px rgba(105,241,232,.42);
+  animation: idleHookDotPulse 1.7s ease-in-out infinite;
+}
+
+.no-topic .minimal-button-rail .physical-target::before {
+  animation-duration: 2.4s;
+}
+
+.no-topic .minimal-button-rail .topic-button:nth-child(1) .physical-target::before { animation-delay: 0s; }
+.no-topic .minimal-button-rail .topic-button:nth-child(2) .physical-target::before { animation-delay: .12s; }
+.no-topic .minimal-button-rail .topic-button:nth-child(3) .physical-target::before { animation-delay: .24s; }
+.no-topic .minimal-button-rail .topic-button:nth-child(4) .physical-target::before { animation-delay: .36s; }
+.no-topic .minimal-button-rail .topic-button:nth-child(5) .physical-target::before { animation-delay: .48s; }
+
+@keyframes idleHookCycle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 13px);
+    filter: blur(6px);
+  }
+  9% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    filter: blur(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    filter: blur(0);
+  }
+  92%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -7px);
+    filter: blur(4px);
+  }
+}
+
+@keyframes idleHookDotPulse {
+  0%, 100% {
+    transform: scale(.82);
+    opacity: .48;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle-hook-copy {
+    animation: idleHookFadeOnly 5.6s linear both;
+  }
+
+  .idle-hook-dot,
+  .no-topic .minimal-button-rail .physical-target::before {
+    animation: none;
+  }
+}
+
+@keyframes idleHookFadeOnly {
+  0%, 100% { opacity: 0; }
+  10%, 86% { opacity: 1; }
+}
