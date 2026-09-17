@@ -12,8 +12,11 @@ type IdleHook = {
   subtitle: string
 }
 
+type VisibleClipTopic = TopicId | null | undefined
+
 const IDLE_VIDEO = '/media/00_IDLE_LOOP.mp4'
-const STORY_END_OVERLAP_SECONDS = 0.16
+const STORY_END_OVERLAP_SECONDS = 0.28
+const DECK_RELEASE_DELAY_MS = 260
 const IDLE_HOOK_DURATION_MS = 5600
 
 const IDLE_HOOKS: IdleHook[] = [
@@ -78,6 +81,7 @@ function App() {
   const debug = useMemo(() => new URLSearchParams(window.location.search).get('debug') === '1', [])
   const [selectedId, setSelectedId] = useState<TopicId | null>(null)
   const [playKey, setPlayKey] = useState(0)
+  const [visibleClipTopicId, setVisibleClipTopicId] = useState<VisibleClipTopic>(undefined)
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.id === selectedId) ?? null,
@@ -96,6 +100,10 @@ function App() {
 
   const handleStoryEnd = useCallback((topicId: TopicId) => {
     setSelectedId((current) => (current === topicId ? null : current))
+  }, [])
+
+  const handleClipVisible = useCallback((topicId: TopicId | null) => {
+    setVisibleClipTopicId(topicId)
   }, [])
 
   useEffect(() => {
@@ -145,10 +153,11 @@ function App() {
         topic={selectedTopic}
         playKey={playKey}
         onStoryEnd={handleStoryEnd}
+        onClipVisible={handleClipVisible}
       />
 
       <MinimalBrand topic={selectedTopic} />
-      <MinimalStory topic={selectedTopic} />
+      <MinimalStory topic={selectedTopic} visibleClipTopicId={visibleClipTopicId} />
       <PhysicalButtonRail selectedId={selectedId} onSelect={selectTopic} />
 
       {debug && (
@@ -156,6 +165,7 @@ function App() {
           <span>PROJECTOR SAFE</span>
           <span>1 IDLE LOOP + 5 STORY FILMS</span>
           <span>SHARED REACH ZONE</span>
+          <span>VISIBLE DECK: {visibleClipTopicId === undefined ? 'BOOT' : visibleClipTopicId ?? 'IDLE'}</span>
           <span>KEY 1–5 · 0/ESC IDLE · F FULLSCREEN</span>
         </div>
       )}
@@ -194,10 +204,12 @@ function SequencePlayer({
   topic,
   playKey,
   onStoryEnd,
+  onClipVisible,
 }: {
   topic: BodyTopic | null
   playKey: number
   onStoryEnd: (topicId: TopicId) => void
+  onClipVisible: (topicId: TopicId | null) => void
 }) {
   const deckA = useRef<HTMLVideoElement>(null)
   const deckB = useRef<HTMLVideoElement>(null)
@@ -221,6 +233,7 @@ function SequencePlayer({
 
     let cancelled = false
     let advanced = false
+    let releaseTimer: number | undefined
 
     incoming.pause()
     incoming.loop = clip.loop
@@ -240,8 +253,11 @@ function SequencePlayer({
         setMediaVisible(true)
         frontDeckRef.current = nextDeck
         setFrontDeck(nextDeck)
+        onClipVisible(clip.topicId)
 
-        window.setTimeout(() => outgoing?.pause(), 240)
+        releaseTimer = window.setTimeout(() => {
+          outgoing?.pause()
+        }, DECK_RELEASE_DELAY_MS)
       } catch {
         setFailedSrc(clip.src)
         setMediaVisible(false)
@@ -278,12 +294,13 @@ function SequencePlayer({
 
     return () => {
       cancelled = true
+      if (releaseTimer !== undefined) window.clearTimeout(releaseTimer)
       incoming.removeEventListener('canplay', switchToIncoming)
       incoming.removeEventListener('timeupdate', advanceBeforeEnd)
       incoming.removeEventListener('ended', ended)
       incoming.removeEventListener('error', fail)
     }
-  }, [clip.loop, clip.src, clip.topicId, onStoryEnd, playKey])
+  }, [clip.loop, clip.src, clip.topicId, onClipVisible, onStoryEnd, playKey])
 
   return (
     <div className={`cinema-layer ${mediaVisible ? 'media-visible' : 'media-fallback'}`}>
@@ -306,8 +323,19 @@ function MinimalBrand({ topic }: { topic: BodyTopic | null }) {
   )
 }
 
-function MinimalStory({ topic }: { topic: BodyTopic | null }) {
-  if (!topic) return <IdleHookStory />
+function MinimalStory({
+  topic,
+  visibleClipTopicId,
+}: {
+  topic: BodyTopic | null
+  visibleClipTopicId: VisibleClipTopic
+}) {
+  if (!topic) {
+    if (visibleClipTopicId !== null) return null
+    return <IdleHookStory />
+  }
+
+  if (visibleClipTopicId !== topic.id) return null
 
   const caption = STORY_CAPTIONS[topic.id]
   return (
