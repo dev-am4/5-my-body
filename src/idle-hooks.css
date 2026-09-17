@@ -16,6 +16,57 @@
   opacity: 0;
 }
 
+/* Idle composition: keep the visual subject on the left, hooks on the right,
+   and the five touch targets in a lower-right interaction band. */
+.video-first.idle-ui-visible .minimal-brand {
+  left: auto;
+  right: 4vw;
+  top: 3vh;
+  justify-content: flex-end;
+}
+
+.video-first.idle-ui-visible .minimal-idle-copy {
+  left: 70vw;
+  bottom: 40vh;
+  width: min(52vw, 820px);
+  text-align: left;
+}
+
+.video-first.idle-ui-visible .minimal-idle-copy h1 {
+  max-width: 820px;
+  margin-inline: 0;
+}
+
+.video-first.idle-ui-visible .minimal-idle-copy p {
+  justify-content: flex-start;
+}
+
+.video-first.idle-ui-visible .minimal-button-rail {
+  left: 42vw;
+  right: 4vw;
+  bottom: 10vh;
+  height: 18vh;
+  min-height: 128px;
+  max-height: 184px;
+  gap: .8vw;
+}
+
+/* Development fallback only: visually reserve the left side for the person.
+   Production video should be authored with the subject already framed left. */
+.video-first.no-topic .fallback-stage {
+  inset: 5vh 54vw 10vh 2vw;
+  transform: none;
+}
+
+.video-first.no-topic .fallback-body {
+  height: 90%;
+  max-width: 40vw;
+}
+
+.video-first.no-topic .fallback-floor {
+  width: 23vw;
+}
+
 .idle-hook-copy {
   animation: idleHookCycle 5.6s cubic-bezier(.22,.7,.2,1) both;
   will-change: opacity, transform, filter;
@@ -122,6 +173,36 @@
   50% {
     transform: scale(1.18);
     opacity: 1;
+  }
+}
+
+@media (max-aspect-ratio: 4/3) {
+  .video-first.idle-ui-visible .minimal-idle-copy {
+    left: 69vw;
+    width: 50vw;
+    bottom: 42vh;
+  }
+
+  .video-first.idle-ui-visible .minimal-button-rail {
+    left: 40vw;
+    right: 3vw;
+    bottom: 9vh;
+  }
+
+  .video-first.no-topic .fallback-stage {
+    inset-right: 56vw;
+  }
+}
+
+@media (max-height: 760px) {
+  .video-first.idle-ui-visible .minimal-idle-copy {
+    bottom: 42vh;
+  }
+
+  .video-first.idle-ui-visible .minimal-button-rail {
+    bottom: 8vh;
+    height: 19vh;
+    min-height: 112px;
   }
 }
 
