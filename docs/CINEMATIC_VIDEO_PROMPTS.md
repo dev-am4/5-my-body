@@ -1,139 +1,240 @@
-# 5 MY BODY — CINEMATIC VIDEO PROMPT PACK
+# 5 MY BODY — 6-FILM CINEMATIC PROMPT PACK
 
-เป้าหมาย: สร้างวิดีโอที่ต่อกันเป็นประสบการณ์เดียว ไม่ให้รู้สึกว่าเป็น UI หรือคลิปแยกชิ้น
+เป้าหมาย: งานนี้ต้องรู้สึกเหมือน **Interactive Science Film บนผนัง** ไม่ใช่เว็บไซต์
 
-## MASTER LOOK — ใช้กับทุกคลิป
+ระบบใช้วิดีโอเพียง 6 ไฟล์:
 
-**Image / Start-frame prompt**
+```text
+00_IDLE_LOOP.mp4
+01_BRAIN.mp4
+02_HEART.mp4
+03_DIGESTION.mp4
+04_PUBLIC_HEALTH.mp4
+05_DNA.mp4
+```
 
-> A premium cinematic science-museum projection of a full-body young human figure standing upright at the exact center of a 16:9 frame, facing forward in a calm neutral pose, entire body visible from head to feet. Deep black infinite environment, sophisticated biomedical visualization, natural human exterior with elegant semi-transparent internal anatomy visible in subtle layers: softly beating heart, branching blood vessels, lungs expanding gently, faint neural activity in the brain, digestive system, microscopic cellular particles. Advanced volumetric medical scan aesthetic, scientifically inspired, realistic materials, cinematic depth, deep blacks, restrained cyan light with natural warm red and amber biological highlights. Large negative space around the body for projection. Camera completely locked, symmetrical composition, no camera shake, no text, no labels, no logo, no interface, no HUD, no watermark, no extra limbs, no anatomy distortion. Museum-grade immersive visual, high contrast, 4K.
+- `00_IDLE_LOOP` เล่นวนตลอดเมื่อไม่มีคนกด
+- วิดีโอย่อยทั้ง 5 เป็นหนังสั้น ไม่ loop
+- เมื่อวิดีโอย่อยจบ ระบบกลับ `00_IDLE_LOOP` อัตโนมัติ
+- ถ้าผู้ชมกดหัวข้ออื่นระหว่างเล่น ระบบเปลี่ยนเรื่องได้ทันทีด้วย A/B video deck
+- ทุกเรื่องต้องใช้ Master Human, black level, lens, camera, lighting และ body treatment เดียวกัน
 
-**Global motion rule**
+---
 
-> Keep the same person, same face, same body proportions, same clothing/body treatment, same camera, same lens, same lighting direction and same background in every shot. Movement must be slow, controlled and physically believable. No morphing between identities. No scene cut. No sudden camera move. Preserve the exact final frame for use as the next shot reference.
+# MASTER VISUAL DNA — ใช้กับทุกไฟล์
+
+## Master image prompt
+
+> A spectacular premium cinematic science-museum projection, full-body young human figure standing upright at the exact center of a 16:9 frame, facing forward in a calm neutral pose, entire body visible from head to feet. Deep black infinite environment with subtle volumetric atmosphere. Natural human exterior combined with elegant semi-transparent biomedical visualization: softly beating heart, faint vascular flow, lungs gently breathing, subtle neural activity in the brain, digestive anatomy appearing only in restrained layers, microscopic cellular particles drifting slowly around the body. Photorealistic but exhibition-safe, sophisticated medical visualization, cinematic depth, deep blacks, restrained cyan light with natural warm red and amber biological highlights. Large negative space around the figure. Camera completely locked, symmetrical composition, fixed lens, fixed exposure, fixed focus, no camera shake. No text, no labels, no logo, no interface, no HUD, no watermark, no extra limbs, no distorted anatomy, no gore, no horror, no cartoon styling. Museum-grade 4K immersive visual.
+
+## Global consistency block
+
+> Use the exact same person, same face, same body proportions, same body treatment, same camera position, same focal length, same exposure, same lighting direction, same black background and same floor relationship in every film. The body must remain the visual anchor of the experience. All transitions must happen through light, particles, internal anatomy and controlled spatial motion inside the same visual world. Never cut to a completely different set or background. Never fade to black.
+
+---
+
+# UNIVERSAL CONTINUITY RULE — สำคัญที่สุด
+
+ทุกเรื่องใช้ตำแหน่งภาพร่วมกัน 3 สถานะ:
+
+```text
+HOME FRAME   = ร่างกายอยู่กลางจอ เหมือน 00_IDLE_LOOP
+SWITCH FRAME = ร่างกายอยู่ซ้ายประมาณ 28–32% ของเฟรม
+HOME FRAME   = กลับมาตรงกลางอีกครั้งก่อนจบ
+```
+
+เพื่อให้ "กดเปลี่ยนเรื่องทันที" แล้วยังเนียน:
+
+- วิดีโอย่อยทุกเรื่องช่วงประมาณ `00:01.20` ต้องมี **SWITCH FRAME ที่เหมือนกัน**
+- คนต้องอยู่ตำแหน่งซ้ายเท่ากัน ขนาดเท่ากัน แสงเท่ากัน และพื้นหลังดำเท่ากัน
+- เว็บสามารถเริ่มวิดีโอเรื่องใหม่จาก `00:01.20` เมื่อเปลี่ยนเรื่องกลางคัน จึงไม่ต้องเห็นร่างกลับไปกลางก่อน
+- ช่วงท้ายของทุกเรื่องต้องพาร่างกลับจาก SWITCH FRAME → HOME FRAME
+- เฟรมท้ายต้องตรงกับเฟรมอ้างอิงของ `00_IDLE_LOOP`
+
+สร้างไฟล์อ้างอิง 2 รูปและล็อกใช้ตลอดทั้งงาน:
+
+```text
+MASTER_HOME_FRAME.png
+MASTER_SWITCH_FRAME.png
+```
 
 ---
 
 # 00 — IDLE LOOP
 
-**Duration target:** 10–14 s, seamless loop
+**ชื่อไฟล์:** `00_IDLE_LOOP.mp4`
 
-> Static locked camera. The full-body human remains perfectly centered. Natural breathing only. A soft volumetric scan slowly travels through the body. The heart pulses naturally, faint blood flow travels through vessels, the lungs gently expand and contract, subtle neural impulses glow inside the brain, tiny cellular particles drift slowly around the body. Different anatomical layers softly reveal and fade without abrupt transitions. Elegant, mysterious and inviting. The first and last frame must visually match for a seamless museum idle loop. No text, no interface, no camera movement.
+**Duration:** 12–16 วินาที
 
-**สำคัญ:** Export frame กลาง/ปลายที่นิ่งที่สุดเป็น `MASTER_IDLE_REFERENCE.png` ใช้เป็น start frame ของทุก `*_IN`.
+**Start/End:** MASTER_HOME_FRAME
 
----
+## Video prompt
 
-# 01 — BRAIN
+> Locked static camera. The full-body human remains exactly centered in the frame and almost motionless except for subtle natural breathing. The body feels alive from within. A delicate volumetric medical scan slowly travels through the body. The heart pulses naturally with restrained warm red light. Faint blood flow travels through major vessels. The lungs gently expand and contract. Subtle electrical neural activity flickers inside the brain. The digestive system reveals briefly as a soft amber layer, then fades. Microscopic cellular particles drift slowly around and through the body. The effect should feel mysterious, beautiful and scientifically sophisticated, not like a hospital screen and not like a videogame. Motion remains calm and continuous. No camera movement, no text, no UI. The first and last frames must match perfectly for a seamless museum loop.
 
-## 01_BRAIN_IN
+## Loop construction
 
-**Start frame:** MASTER_IDLE_REFERENCE
-**Duration target:** 4–6 s
+1. ใช้ Master Image เป็น first frame
+2. เจน 8 วินาทีช่วง A
+3. ใช้ frame ปลาย A เป็น reference ทำช่วง B
+4. ให้ช่วง B ค่อย ๆ กลับ visual state ของเฟรมแรก
+5. ใน Premiere เลือกจุด loop ที่ breathing phase, scan brightness และ particle density ใกล้กัน
+6. ห้าม dissolve ดำ ใช้ match-cut/cross-dissolve เพียง 2–4 frames ถ้าจำเป็น
 
-> Continue from the exact idle frame. A subtle pulse rises from below the frame into the body, travels upward through the spine and reaches the head. The brain gradually illuminates with delicate cyan electrical activity. As the neural glow intensifies, the full human figure smoothly glides toward the left side of frame while remaining the exact same size, identity and lighting. Do not cut. Do not zoom. Keep the movement elegant and continuous. By the final frame, the human occupies the left third of the image and a luminous neural network has begun to grow into the center and right side, leaving a clean central storytelling area. Preserve the final frame exactly for the next shot.
-
-## 01_BRAIN_LOOP
-
-**Start frame:** last frame of BRAIN_IN
-**Duration target:** 10–14 s seamless loop
-
-> Keep the human fixed on the left third. The brain remains illuminated. A beautiful three-dimensional neural network fills the center of frame, with controlled electrical impulses travelling between neurons. Subtle visual connections extend from the brain toward the heart, hands and facial region, suggesting the relationship between brain, emotion, behavior and body. The central neural motion must be readable but not chaotic. No camera movement. The beginning and ending state must match for a seamless loop.
-
-## 01_BRAIN_OUT
-
-**Start frame:** a clean frame from BRAIN_LOOP
-**Duration target:** 4–6 s
-
-> Reverse the visual journey naturally, not as an obvious video rewind. Neural activity gently contracts back toward the brain, the network fades into darkness, the body smoothly glides from the left third back to the exact center position. The brain glow softens into the same subtle internal-anatomy state as the idle scene. Final frame must match MASTER_IDLE_REFERENCE as closely as possible. Locked camera, no cut.
+**Output reference:** export เฟรมที่สงบที่สุดเป็น `MASTER_HOME_FRAME.png`
 
 ---
 
-# 02 — HEART / BODY
+# 01 — BRAIN & MIND
 
-## 02_HEART_IN
+**ชื่อไฟล์:** `01_BRAIN.mp4`
 
-> Continue from MASTER_IDLE_REFERENCE. A visible but elegant heartbeat pulse begins in the chest. With each beat, warm red light travels through major blood vessels across the body. The circulation becomes increasingly clear while the same human smoothly glides to the left third of frame. In the center, flowing red blood cells and branching vessels expand into a cinematic scientific visualization. Final frame becomes the reference for HEART_LOOP. No cut, locked camera.
+**Duration target:** 18–24 วินาที
 
-## 02_HEART_LOOP
+## Story structure
 
-> Human remains on the left third with the heart softly beating. The center is filled with realistic cinematic blood-flow visualization: red blood cells moving through arteries, capillaries and veins, oxygen delivery suggested through subtle color and light changes. Add restrained skeletal-muscle and joint motion overlays to connect circulation with movement and physical rehabilitation. Seamless loop, no text, no camera movement.
+`0.0–1.2s` HOME → SWITCH
 
-## 02_HEART_OUT
+> Continue exactly from MASTER_HOME_FRAME. A subtle cyan neural pulse rises through the spine and reaches the brain. As the brain illuminates, the same human figure glides smoothly toward the left side of frame. Camera remains completely locked. By exactly 1.2 seconds the body arrives at MASTER_SWITCH_FRAME position. No cut, no zoom.
 
-> Circulation visualization gently contracts from the center back into the body. Vessel glow reduces to the subtle idle state. Human glides smoothly from the left third back to exact center. Final frame matches MASTER_IDLE_REFERENCE. No cut.
+`1.2–16s` Main visual
+
+> Keep the human body fixed at MASTER_SWITCH_FRAME on the left. The brain remains softly illuminated. A beautiful three-dimensional neural network grows into the center and right side of the projection. Controlled electrical impulses move between neurons. Some impulses visually connect from the brain toward the heart, hands and facial region, suggesting how the nervous system connects perception, movement, emotion and the rest of the body. Introduce a subtle transition from active neural firing into calmer synchronized neural rhythms to visually suggest wakefulness and sleep without displaying charts or text. The body remains visible as the anchor at all times. No scene cut, no camera movement, no UI.
+
+`16–22s` Return
+
+> Neural activity gently contracts toward the brain. The network dissolves into subtle particles while the same human glides smoothly from MASTER_SWITCH_FRAME back to exact MASTER_HOME_FRAME. Brain glow returns to the restrained idle state. The final frame must visually match MASTER_HOME_FRAME so the web can crossfade directly to 00_IDLE_LOOP without a visible jump.
+
+---
+
+# 02 — HEART & BODY
+
+**ชื่อไฟล์:** `02_HEART.mp4`
+
+**Duration target:** 18–24 วินาที
+
+`0.0–1.2s HOME → SWITCH`
+
+> Start from MASTER_HOME_FRAME. One elegant heartbeat pulse radiates from the chest. Warm red light flows through major blood vessels as the same body glides to MASTER_SWITCH_FRAME on the left. Locked camera, same exposure, no cut.
+
+`1.2–16s Main visual`
+
+> Keep the body fixed on the left. The center and right fill with cinematic circulation visualization: realistic red blood cells flowing through branching arteries, capillaries and veins. Show oxygen delivery through restrained changes in light and color. Subtle muscular and joint movement layers appear briefly, connecting circulation to movement and physical rehabilitation. The visual should remain elegant, realistic and family-friendly, never gory. The human body stays visible as the macro anchor.
+
+`16–22s Return`
+
+> Blood-flow visualization contracts back toward the human. Vessel illumination softens. The body glides from MASTER_SWITCH_FRAME back to MASTER_HOME_FRAME. Final frame matches idle exactly.
 
 ---
 
 # 03 — DIGESTION
 
-## 03_DIGESTION_IN
+**ชื่อไฟล์:** `03_DIGESTION.mp4`
 
-> Continue from MASTER_IDLE_REFERENCE. A warm amber trace begins at the mouth and travels naturally down the esophagus into the stomach. The digestive tract becomes visible in an elegant semi-transparent medical visualization. The human glides smoothly to the left third. At center, the view opens into a clean cinematic visualization of digestion and nutrient breakdown without gore, without cartoon styling. Preserve final frame.
+**Duration target:** 18–24 วินาที
 
-## 03_DIGESTION_LOOP
+`0.0–1.2s HOME → SWITCH`
 
-> Human fixed on the left. Center visualization shows food particles breaking into smaller nutrient molecules, movement through the stomach and small intestine, and nutrients passing through the intestinal wall into the bloodstream. Show absorption as elegant luminous particles entering capillaries. Scientifically inspired, family-friendly, sophisticated museum visual. Seamless loop, locked camera.
+> Begin at MASTER_HOME_FRAME. A warm amber trace appears at the mouth and travels naturally down the esophagus. As the stomach and intestine softly illuminate, the same body glides to MASTER_SWITCH_FRAME on the left. Locked camera, no cut.
 
-## 03_DIGESTION_OUT
+`1.2–16s Main visual`
 
-> Nutrient particles and digestive visualization contract back toward the body. The digestive glow softens. Human returns smoothly to exact center position. Final frame matches MASTER_IDLE_REFERENCE.
+> Body remains fixed on the left. The center becomes a sophisticated transparent digestive visualization. Food particles break down into smaller nutrient molecules. Show movement through stomach and small intestine, then luminous nutrient particles crossing the intestinal wall into tiny capillaries and entering the bloodstream. Make the transformation visually clear without diagrams, arrows or labels. Realistic biomedical visualization, elegant and family-friendly.
+
+`16–22s Return`
+
+> Nutrient particles fade into the bloodstream. Digestive illumination contracts back into the body. The human returns smoothly from MASTER_SWITCH_FRAME to MASTER_HOME_FRAME. Final frame matches idle.
 
 ---
 
 # 04 — PUBLIC HEALTH
 
-## 04_PUBLIC_HEALTH_IN
+**ชื่อไฟล์:** `04_PUBLIC_HEALTH.mp4`
 
-> Continue from MASTER_IDLE_REFERENCE. A soft transparent protective field expands around the human body. Tiny airborne particles and simplified microscopic pathogens appear in the surrounding space. The human glides smoothly to the left third. The center expands from one individual into a cinematic network of people, clean water, air, hand hygiene and environmental protection represented visually, not as icons or text. Preserve final frame.
+**Duration target:** 18–24 วินาที
 
-## 04_PUBLIC_HEALTH_LOOP
+`0.0–1.2s HOME → SWITCH`
 
-> Human remains left. Center shows the invisible pathways by which respiratory droplets, contaminated hands, surfaces, water and air can connect people, while layers of prevention interrupt those pathways. Use light barriers, clean-water flow and spatial separation as visual metaphors. Avoid fear or disease imagery. Sophisticated public-health systems visualization, seamless loop, locked camera.
+> Begin at MASTER_HOME_FRAME. A soft transparent protective field appears around the human. Tiny airborne particles become visible. The same body glides smoothly to MASTER_SWITCH_FRAME on the left. Camera remains locked.
 
-## 04_PUBLIC_HEALTH_OUT
+`1.2–16s Main visual`
 
-> Community network and airborne pathways gently dissolve. Protective field contracts back toward the individual. Human glides back to exact center. Final frame matches MASTER_IDLE_REFERENCE.
+> Human remains fixed on the left. The center and right reveal invisible connections between one person and the environment: airborne droplets, hands touching a surface, clean water flow, ventilation currents and abstract silhouettes of nearby people. Show prevention visually by interrupting pathways with hand washing, clean water, fresh airflow and protective spatial barriers, represented through realistic motion and light rather than icons. Avoid frightening disease imagery. Make public health feel like an invisible system surrounding everyday life.
+
+`16–22s Return`
+
+> Environmental pathways dissolve into darkness. The protective field contracts toward the individual. The same human returns smoothly to MASTER_HOME_FRAME. Final frame matches idle.
 
 ---
 
-# 05 — CELLS / DNA
+# 05 — CELLS & DNA
 
-## 05_DNA_IN
+**ชื่อไฟล์:** `05_DNA.mp4`
 
-> Continue from MASTER_IDLE_REFERENCE. A soft scan moves across the body and focuses into the skin and blood. Without moving the camera, create the visual impression of diving through layers of tissue using volumetric compositing: body to tissue to cells to a cell nucleus to DNA. At the same time, the full human smoothly glides to the left third and remains visible as the macro reference. The center fills with a spectacular microscopic cell and DNA environment. Preserve final frame.
+**Duration target:** 18–24 วินาที
 
-## 05_DNA_LOOP
+`0.0–1.2s HOME → SWITCH`
 
-> Human stays left while the center shows a realistic cinematic microscopic environment: living cells, nucleus, chromosomes and DNA double helix, with subtle laboratory-analysis light patterns and sample particles. Show information becoming measurable data through abstract but scientifically restrained light patterns, not a sci-fi HUD. Seamless loop, no text, locked camera.
+> Begin at MASTER_HOME_FRAME. A soft scanning light passes through skin and blood. The same human glides smoothly to MASTER_SWITCH_FRAME on the left while a microscopic window begins to open at center. Locked camera, no cut.
 
-## 05_DNA_OUT
+`1.2–16s Main visual`
 
-> Microscopic world collapses smoothly from DNA to nucleus to cell to tissue and back into the full human body. The figure glides from the left third to exact center. Final frame matches MASTER_IDLE_REFERENCE.
+> Keep the full human visible on the left as the macro anchor. In the center, create the visual impression of moving deeper through scale without changing the main camera: body to tissue to living cells, cell membrane, nucleus, chromosomes and DNA double helix. Use volumetric compositing and scale transformation inside the central visual field. Introduce subtle laboratory sample particles and measurement-like light behavior but never a sci-fi HUD. The relationship between the whole body and microscopic information must remain understandable through continuous visual transformation.
+
+`16–22s Return`
+
+> Reverse scale naturally from DNA to nucleus to cell to tissue. The microscopic field collapses into the body. The human glides from MASTER_SWITCH_FRAME back to MASTER_HOME_FRAME. Final frame matches idle exactly.
 
 ---
 
 # NEGATIVE PROMPT / CONSISTENCY BLOCK
 
-Append this to every generation when the model supports negative prompting:
+ใช้ต่อท้ายทุก generation เมื่อเครื่องมือรองรับ:
 
-> no text, no subtitle, no logo, no watermark, no UI, no HUD, no medical dashboard, no floating labels, no camera shake, no fast zoom, no scene cut, no identity change, no face change, no extra arms, no extra fingers, no duplicated body, no distorted anatomy, no horror, no gore, no surgery, no cartoon, no anime, no oversaturated neon, no random background change, no morphing clothes, no body proportion change
+> no text, no subtitle, no logo, no watermark, no UI, no HUD, no medical dashboard, no floating labels, no camera shake, no fast zoom, no scene cut, no identity change, no face change, no extra arms, no extra fingers, no duplicated body, no distorted anatomy, no horror, no gore, no surgery, no cartoon, no anime, no oversaturated neon, no random background change, no morphing clothes, no body proportion change, no exposure shift, no focus breathing, no black frame
 
 ---
 
-# GOOGLE FLOW WORKFLOW
+# GOOGLE FLOW PRODUCTION WORKFLOW
 
-1. Generate one high-quality MASTER body image first.
-2. Create `00_IDLE_LOOP` from that image.
-3. Export a clean idle frame as `MASTER_IDLE_REFERENCE.png`.
-4. For each topic, generate `*_IN` using MASTER_IDLE_REFERENCE as the starting image.
-5. Export the exact last frame of `*_IN`.
-6. Use that last frame as start image for `*_LOOP`.
-7. Make LOOP visually cyclical; choose matching first/last frames in Premiere if needed.
-8. Use a clean LOOP frame as start image for `*_OUT`.
-9. Force `*_OUT` to end on MASTER_IDLE_REFERENCE composition.
-10. Export all final clips as H.264 MP4, CFR 30 fps, then place them in `/public/media/` using the exact filenames in `public/media/README.md`.
+1. เจน **MASTER HUMAN IMAGE** ให้ผ่านก่อน
+2. ใช้ภาพนั้นสร้าง `00_IDLE_LOOP`
+3. Export `MASTER_HOME_FRAME.png` จาก Idle
+4. สร้าง Brain ช่วง HOME → SWITCH ก่อน แล้ว export `MASTER_SWITCH_FRAME.png` ที่ 1.2 วินาที
+5. ใช้ `MASTER_SWITCH_FRAME.png` เป็น reference กลางร่วมของทั้ง 5 เรื่อง
+6. สำหรับแต่ละเรื่อง เจนเป็นช่วงสั้น 6–8 วินาทีแบบ chain แล้วค่อยต่อใน Premiere
+7. ทุกช่วงใช้ last frame ของช่วงก่อนเป็น next start frame
+8. ช่วงสุดท้ายต้องกลับให้ตรง `MASTER_HOME_FRAME.png`
+9. ตรวจ visual continuity ด้วยการวางคลิปชนกันแบบ cut ก่อน ถ้ายังเห็นรอยค่อยใช้ dissolve 2–4 frames
+10. Export final เป็นไฟล์ 6 ตัวตามชื่อด้านบน
 
-# EDITING NOTE
+---
 
-Do not rely on AI generation alone for the final 2–4 frames of a join. In Premiere, trim each boundary on matching motion, then use a very short 2–4 frame dissolve only when needed. The web player already performs an additional ~360 ms A/B opacity crossfade while the incoming clip is playing, so visual discontinuities should be hidden rather than exposed.
+# PREMIERE / EXPORT BASELINE
+
+- Master: 3840×2160 หรือ resolution จริงของ projection master
+- Prototype: 1920×1080
+- 30 fps Constant Frame Rate
+- MP4 / H.264 High Profile
+- yuv420p
+- Keyframe interval ≤ 1 วินาที
+- Fast Start
+- ห้าม Variable Frame Rate
+- ให้ black level และ exposure ของทั้ง 6 ไฟล์ตรงกัน
+- เสียงแยกจากภาพหลัก เพื่อให้ควบคุม VO/SFX หน้างานได้
+
+## Seam test
+
+ทดสอบ 7 เส้นทางนี้ก่อนส่งงาน:
+
+```text
+IDLE → BRAIN → IDLE
+IDLE → HEART → IDLE
+IDLE → DIGESTION → IDLE
+IDLE → PUBLIC HEALTH → IDLE
+IDLE → DNA → IDLE
+BRAIN mid-film → HEART at SWITCH FRAME
+DNA mid-film → DIGESTION at SWITCH FRAME
+```
+
+หาก 7 เส้นทางนี้มองไม่เห็น black flash, exposure jump, body-size jump หรือ position jump ถือว่า visual language พร้อมนำไปใช้กับผนังจริง
