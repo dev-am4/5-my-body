@@ -1,0 +1,6 @@
+.ambient-gllow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: .13;
+}
