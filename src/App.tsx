@@ -225,6 +225,7 @@ function SequencePlayer({
 }) {
   const deckA = useRef<HTMLVideoElement>(null)
   const deckB = useRef<HTMLVideoElement>(null)
+  const frontDeckRef = useRef<0 | 1>(0)
   const [frontDeck, setFrontDeck] = useState<0 | 1>(0)
   const [mediaVisible, setMediaVisible] = useState(false)
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
@@ -239,9 +240,10 @@ function SequencePlayer({
 
   useEffect(() => {
     const refs = [deckA.current, deckB.current] as const
-    const nextDeck: 0 | 1 = frontDeck === 0 ? 1 : 0
+    const currentDeck = frontDeckRef.current
+    const nextDeck: 0 | 1 = currentDeck === 0 ? 1 : 0
     const incoming = refs[nextDeck]
-    const outgoing = refs[frontDeck]
+    const outgoing = refs[currentDeck]
     if (!incoming) return
 
     let cancelled = false
@@ -262,6 +264,7 @@ function SequencePlayer({
         if (cancelled) return
         setFailedSrc(null)
         setMediaVisible(true)
+        frontDeckRef.current = nextDeck
         setFrontDeck(nextDeck)
         window.setTimeout(() => outgoing?.pause(), 420)
       } catch {
@@ -294,7 +297,7 @@ function SequencePlayer({
       incoming.removeEventListener('error', fail)
       incoming.removeEventListener('ended', ended)
     }
-  }, [clip.loop, clip.src, frontDeck, onSegmentEnd])
+  }, [clip.loop, clip.src, onSegmentEnd])
 
   return (
     <div className={`cinema-layer ${mediaVisible ? 'media-visible' : 'media-fallback'}`}>
@@ -313,7 +316,7 @@ function Ambient() {
     <div className="ambient" aria-hidden="true">
       <div className="ambient-grid" />
       <div className="ambient-glow glow-a" />
-      <div className="ambient-glow glow-b" />
+      <div className="ambient-gllow glow-b" />
       <div className="micro-dots">
         {Array.from({ length: 24 }).map((_, index) => (
           <i key={index} style={{ '--i': index } as CSSProperties} />
