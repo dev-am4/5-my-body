@@ -58,7 +58,9 @@ function App() {
   const debug = useMemo(() => new URLSearchParams(window.location.search).get('debug') === '1', [])
   const [selectedId, setSelectedId] = useState<TopicId | null>(null)
   const [playKey, setPlayKey] = useState(0)
-  const [visibleClipTopicId, setVisibleClipTopicId] = useState<VisibleClipTopic>(undefined)
+  // Start in idle even before media is available. This keeps the prototype usable
+  // while the six final MP4 files are still missing from /public/media.
+  const [visibleClipTopicId, setVisibleClipTopicId] = useState<VisibleClipTopic>(null)
 
   const selectedTopic = useMemo(
     () => topics.find((topic) => topic.id === selectedId) ?? null,
@@ -231,6 +233,14 @@ function SequencePlayer({
     incoming.src = clip.src
     incoming.currentTime = 0
 
+    const showFallbackForClip = () => {
+      setFailedSrc(clip.src)
+      setMediaVisible(false)
+      // Treat the fallback as the currently visible clip so the rest of the
+      // interaction state behaves exactly like it will with final videos.
+      onClipVisible(clip.topicId)
+    }
+
     const switchToIncoming = async () => {
       if (cancelled) return
       try {
@@ -247,8 +257,8 @@ function SequencePlayer({
           outgoing?.pause()
         }, DECK_RELEASE_DELAY_MS)
       } catch {
-        setFailedSrc(clip.src)
-        setMediaVisible(false)
+        if (cancelled) return
+        showFallbackForClip()
       }
     }
 
@@ -270,8 +280,7 @@ function SequencePlayer({
 
     const fail = () => {
       if (cancelled) return
-      setFailedSrc(clip.src)
-      setMediaVisible(false)
+      showFallbackForClip()
     }
 
     incoming.addEventListener('canplay', switchToIncoming, { once: true })
