@@ -1,0 +1,98 @@
+/* Flow-preview fallback used only while the real MP4 files are absent.
+   Once a video deck can play, the video covers this layer completely. */
+
+.video-first .cinema-layer.media-fallback {
+  background:
+    radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 31%),
+    radial-gradient(circle at 50% 50%, #09202c 0%, #020b12 48%, #000 100%);
+  transition: background 320ms ease;
+}
+
+/* Story preview behaves like the final full-screen film: no menu composition,
+   no right-column layout, and no visible controls. */
+.video-first.has-topic .cinema-layer.media-fallback .fallback-stage.active {
+  inset: 0;
+  transform: none;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  transition:
+    opacity 260ms ease,
+    filter 320ms ease;
+  filter: saturate(1.04);
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .fallback-body {
+  height: min(88vh, 860px);
+  max-height: 88vh;
+  max-width: 54vw;
+  filter:
+    drop-shadow(0 0 34px color-mix(in srgb, var(--accent) 28%, transparent))
+    drop-shadow(0 0 82px color-mix(in srgb, var(--accent) 12%, transparent));
+  animation: prototypeFilmBreath 5.4s ease-in-out infinite;
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .body-orbit {
+  opacity: .62;
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .orbit-one {
+  width: min(62vw, 900px);
+  height: min(62vw, 900px);
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .orbit-two {
+  width: min(48vw, 700px);
+  height: min(48vw, 700px);
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .fallback-floor {
+  bottom: 8vh;
+  width: min(38vw, 560px);
+  height: min(7vw, 92px);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow:
+    0 0 60px color-mix(in srgb, var(--accent) 16%, transparent) inset,
+    0 0 80px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.video-first.has-topic .cinema-layer.media-fallback .fallback-organs .selected {
+  stroke: var(--accent);
+  stroke-width: 3.4;
+  filter: drop-shadow(0 0 13px var(--accent));
+  animation: prototypeSelectedPulse 1.35s ease-in-out infinite;
+}
+
+/* Public-health topic has no single organ path, so the body aura becomes the focus. */
+.video-first.has-topic[style*="--accent"] .cinema-layer.media-fallback .fallback-aura {
+  transition: stroke .3s ease, opacity .3s ease;
+}
+
+/* During idle, preserve the left-side subject composition established for the real idle film. */
+.video-first.no-topic .cinema-layer.media-fallback .fallback-stage {
+  transition: opacity 260ms ease, transform 380ms cubic-bezier(.22,.72,.2,1);
+}
+
+@keyframes prototypeFilmBreath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.014); }
+}
+
+@keyframes prototypeSelectedPulse {
+  0%, 100% { opacity: .72; }
+  50% { opacity: 1; }
+}
+
+@media (max-aspect-ratio: 4/3) {
+  .video-first.has-topic .cinema-layer.media-fallback .fallback-body {
+    max-width: 66vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-first.has-topic .cinema-layer.media-fallback .fallback-body,
+  .video-first.has-topic .cinema-layer.media-fallback .fallback-organs .selected {
+    animation: none;
+  }
+}
