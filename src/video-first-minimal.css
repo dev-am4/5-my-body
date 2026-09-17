@@ -68,7 +68,6 @@
   text-align: center;
   pointer-events: none;
   text-shadow: 0 3px 24px rgba(0,0,0,.92);
-  animation: minimalCaptionIn .55s ease both;
 }
 
 .minimal-idle-copy h1 {
@@ -80,10 +79,39 @@
 }
 
 .minimal-idle-copy p {
-  margin: .45rem 0 0;
-  color: rgba(225,255,252,.58);
-  font-size: clamp(10px, .74vw, 14px);
-  letter-spacing: .08em;
+  margin: .48rem 0 0;
+  color: rgba(225,255,252,.64);
+  font-size: clamp(10px, .76vw, 15px);
+  letter-spacing: .06em;
+}
+
+/* Six rotating hooks: 0.55s in, long readable hold, then a soft dissolve before the next hook mounts. */
+.idle-hook-copy {
+  will-change: opacity, transform, filter;
+  animation: idleHookCycle 5.6s cubic-bezier(.22,.7,.2,1) both;
+}
+
+.idle-hook-copy h1 {
+  max-width: 1050px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.idle-hook-copy p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+}
+
+.idle-hook-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 75%, transparent);
+  animation: idleHookDotPulse 1.8s ease-in-out infinite;
 }
 
 /* Only one small educational caption is visible during the cinematic loop. */
@@ -272,6 +300,47 @@
 @keyframes minimalCaptionIn {
   from { opacity: 0; transform: translate(-50%, 8px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes idleHookCycle {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+    filter: blur(5px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    filter: blur(0);
+  }
+  84% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -7px);
+    filter: blur(4px);
+  }
+}
+
+@keyframes idleHookDotPulse {
+  0%, 100% { transform: scale(.78); opacity: .45; }
+  50% { transform: scale(1.18); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle-hook-copy {
+    animation: none;
+    opacity: 1;
+    transform: translateX(-50%);
+    filter: none;
+  }
+
+  .idle-hook-dot {
+    animation: none;
+  }
 }
 
 @media (max-height: 760px) {
